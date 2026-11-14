@@ -13,6 +13,7 @@ const signed = n => has(n) ? `<span class="${n < 0 ? "neg" : ""}">${usd(n)}</spa
 const neg = n => has(n) ? usd(-n) : NA;
 const date = iso => iso ? new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : NA;
 const monthLabel = ym => new Date(ym + "-15T12:00:00Z").toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+const monthYear = iso => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
 const STATUS = { paid: "Paid", late: "Paid late", due: "Due", unpaid: "Unpaid" };
 const total = xs => xs.every(has) && xs.length ? xs.reduce((a, b) => a + b, 0) : null;
 
@@ -145,6 +146,9 @@ function property(p) {
         ["Purchased", date(p.purchaseDate)],
         ["Closing costs", usd(p.closingCosts)],
         ["Estimated value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
+        p.market ? [`Market estimate (${esc(p.market.source)}, ${monthYear(p.market.date)})`,
+          `${usd(p.market.value)}${has(p.market.low) ? ` <span class="sub">(range ${usd(p.market.low)} – ${usd(p.market.high)})</span>` : ""}`] : null,
+        p.market && has(p.purchasePrice) ? ["Market estimate vs. purchase", `${signed(p.market.value - p.purchasePrice)} <span class="sub">(${pct((p.market.value - p.purchasePrice) / p.purchasePrice * 100)})</span>`] : null,
         p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity", usd(c.equity)]
@@ -185,6 +189,7 @@ export function renderPortfolio(data, title) {
   const T = f => total(ps.map(f));
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
+  const market = T(x => x.p.market ? x.p.market.value : null);
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
@@ -210,9 +215,9 @@ export function renderPortfolio(data, title) {
     <h3>Monthly cash flow by property</h3>
     <div class="scroll">
       <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
-        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
+        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
+        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(p.market && p.market.value)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(market)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
     </div>
   </section>
