@@ -42,7 +42,7 @@ function calc(p) {
   const debt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.mi || 0) + (loan.escrow || 0) : null);
   const expList = Object.values(p.expenses || {});
   const expenses = p.expenses && expList.length && expList.every(v => v === 0 || has(v)) ? expList.reduce((a, b) => a + b, 0) : null;
-  const otherList = Object.values(p.otherIncome || {});
+  const otherList = [...Object.values(p.otherIncome || {}), ...(p.units || []).flatMap(u => Object.values(u.charges || {}))];
   const other = otherList.every(has) ? otherList.reduce((a, b) => a + b, 0) : null;
   const income = all(rent, other) ? rent + other : null;
   const cashFlow = all(income, debt, expenses) ? income - debt - expenses : null;
@@ -112,7 +112,8 @@ function property(p) {
   const rentRows = p.units
     ? p.units.map(u => `<div><dt>Rent, ${esc(u.unit)}</dt><dd>${usd(u.rent)}</dd></div>`).join("")
     : `<div><dt>Rent</dt><dd>${usd(c.rent)}</dd></div>`;
-  const otherRows = Object.entries(p.otherIncome || {}).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${usd(v)}</dd></div>`).join("");
+  const otherRows = [...Object.entries(p.otherIncome || {}), ...(p.units || []).flatMap(u => Object.entries(u.charges || {}).map(([k, v]) => [`${k}, ${u.unit}`, v]))]
+    .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${usd(v)}</dd></div>`).join("");
   const debtRows = l && (l.mi || l.escrow)
     ? `<div><dt>Mortgage principal and interest</dt><dd>${neg(l.payment)}</dd></div>`
       + (l.mi ? `<div><dt>Mortgage insurance</dt><dd>${neg(l.mi)}</dd></div>` : "")
@@ -189,7 +190,7 @@ export function renderPortfolio(data, title) {
   return `
 <div class="portal">
   <div class="intro">
-    <p class="eyebrow">${esc(title)} · Executive Portal</p>
+    <p class="eyebrow">${esc(title)} · ${esc(data.portalLabel || "Executive Portal")}</p>
     <h1>Portfolio</h1>
     <p>${data.asOf ? `Figures as of ${esc(data.asOf)}. ` : ""}Select a property for financing, tenant, rent and maintenance details.</p>
     ${data.sample ? `<p class="sample-note">Sample data. These properties and figures are examples to show the layout.</p>` : ""}
@@ -219,5 +220,74 @@ export function renderPortfolio(data, title) {
     <h3>Properties</h3>
     <div class="properties">${ps.map(({ p }) => property(p)).join("")}</div>
   </section>
+</div>`;
+}
+
+// ---------- Tenant portal: one page per unit, showing only that unit's own details ----------
+
+const firstNames = name => {
+  const parts = String(name).split(/,\s*|\s+and\s+|\s*&\s*/).map(s => s.trim().split(/\s+/)[0]).filter(Boolean);
+  return parts.length <= 1 ? parts.join("") : parts.slice(0, -1).join(", ") + " and " + parts.at(-1);
+};
+
+export function renderTenant(data, p, u) {
+  const t = u.tenant || {};
+  const extras = Object.entries(u.charges || {});
+  const due = (u.rent || 0) + extras.reduce((a, [, v]) => a + v, 0);
+  const address = `${u.unit} ${p.street}`;
+  const memo = `${address} rent`;
+  const venmoUrl = `https://venmo.com/?txn=pay&recipients=${encodeURIComponent(data.venmo)}&amount=${due.toFixed(2)}&note=${encodeURIComponent(memo)}`;
+  const contacts = (data.contacts || []).map(c => `
+        <li>
+          <strong>${esc(c.name)}</strong>
+          <a href="tel:${esc(c.phone.replace(/[^0-9+]/g, ""))}">${esc(c.phone)}</a>
+          <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>
+        </li>`).join("");
+
+  return `
+<div class="portal tenant">
+  <div class="intro">
+    <p class="eyebrow">MP Holdings · Tenant Portal</p>
+    <h1>Welcome, ${esc(firstNames(t.name || ""))}</h1>
+    <p>${esc(address)}, ${esc(p.city)}</p>
+  </div>
+
+  <div class="tenant-grid">
+    <section class="pay-card">
+      <h3>Pay Rent</h3>
+      <p class="due"><strong>${usd(due)}</strong> due on the 1st of each month</p>
+      ${extras.length ? `<dl class="facts">
+        <div><dt>Rent</dt><dd>${usd(u.rent)}</dd></div>
+        ${extras.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${usd(v)}</dd></div>`).join("")}
+      </dl>` : ""}
+      <a class="button venmo" href="${esc(venmoUrl)}" target="_blank" rel="noopener">Pay with Venmo</a>
+      <p class="handle">Venmo: <strong>@${esc(data.venmo)}</strong></p>
+      <p class="note">Please put your address and the month in the Venmo note, for example “${esc(address)}, ${new Date().toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })} rent.”</p>
+      <p class="note">Rent is late if not paid within 5 days of the 1st. A late fee of $10 per day applies after that.</p>
+    </section>
+
+    <section class="panel">
+      <h4>Your lease</h4>
+      ${dl([
+        ["Tenant", esc(t.name)],
+        ["Lease", t.leaseStart ? `${date(t.leaseStart)} to ${t.leaseEnd ? date(t.leaseEnd) : NA}` : NA],
+        t.note && /month-to-month/i.test(t.note) ? ["Status", esc(t.note)] : null,
+        ["Monthly rent", usd(u.rent)],
+        ...extras.map(([k, v]) => [k, usd(v)]),
+        ["Security deposit", usd(t.deposit)]
+      ])}
+    </section>
+
+    <section class="panel">
+      <h4>Your rent payments</h4>
+      ${Object.keys(u.payments || {}).length ? months(u.payments) : `<p class="empty">Your payment history will appear here once it's recorded.</p>`}
+    </section>
+
+    <section class="panel">
+      <h4>Maintenance and questions</h4>
+      <p>For maintenance requests or anything about your home, call, text or email either of us. For an emergency such as a leak, no heat or a safety issue, please call right away.</p>
+      <ul class="contacts">${contacts}</ul>
+    </section>
+  </div>
 </div>`;
 }

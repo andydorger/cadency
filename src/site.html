@@ -284,6 +284,27 @@ form .button { width: 100%; }
 .chip.due { color: var(--ink-soft); background: var(--paper-2); }
 .chip.unpaid { color: var(--bad); background: var(--bad-bg); font-weight: 500; }
 
+/* Tenant portal */
+.go-pair { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: .4rem; }
+.go-pair .go { margin-top: 0; text-decoration: none; }
+.go-pair .go:hover { background: var(--ink); color: var(--paper); }
+.entrance:has(.go-pair):hover .go { background: transparent; color: var(--ink); }
+.entrance:has(.go-pair):hover .go:hover { background: var(--ink); color: var(--paper); }
+.tenant-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem 3rem; }
+.pay-card { grid-row: span 2; display: grid; gap: .9rem; align-content: start; padding: 1.75rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
+.pay-card h3 { font-size: 1.5rem; }
+.pay-card .due { color: var(--ink-soft); }
+.pay-card .due strong { display: block; font-family: var(--display); font-weight: 500; font-size: 2.6rem; line-height: 1.1; color: var(--ink); font-variant-numeric: lining-nums; }
+.pay-card .venmo { justify-self: start; margin-top: .4rem; }
+.pay-card .handle { font-size: 1rem; color: var(--ink-soft); user-select: all; }
+.pay-card .note { font-size: .95rem; color: var(--muted); font-style: italic; }
+.tenant .panel p { color: var(--ink-soft); font-size: 1rem; }
+.contacts { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.contacts li { display: grid; gap: .1rem; font-size: 1rem; }
+.contacts strong { font-weight: 500; color: var(--ink); }
+.contacts a { color: var(--ink-soft); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; overflow-wrap: anywhere; }
+.contacts a:hover { text-decoration-color: var(--brass); }
+
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
 .heraldry p { color: var(--ink-soft); font-size: 1.05rem; }
@@ -306,6 +327,9 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
   .entrance .mp-mark { width: 12rem; }
   .entrance .name { font-size: 1.45rem; }
   .portal .sections { grid-template-columns: 1fr; }
+  .tenant-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .pay-card { grid-row: auto; padding: 1.4rem 1.25rem; }
+  .go-pair .go { padding: .55rem .8rem .5rem; }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tiles div + div { border-left: 0; }
   .tiles div:nth-child(even) { border-left: 1px solid var(--rule); }
@@ -353,12 +377,15 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
         <span class="eyebrow">Executive Login</span>
         <span class="go">Sign In</span>
       </a>
-      <a class="entrance" href="#mp-holdings">
+      <div class="entrance">
         <span class="mp-mark" role="img" aria-label="MP Holdings mark: a top hat, monocle and moustache above a house"></span>
         <span class="name">MP HOLDINGS</span>
-        <span class="eyebrow">Executive Login</span>
-        <span class="go">Sign In</span>
-      </a>
+        <span class="eyebrow">Owners and Tenants</span>
+        <span class="go-pair">
+          <a class="go" href="#mp-owner">Owner Login</a>
+          <a class="go" href="#mp-tenant">Tenant Login</a>
+        </span>
+      </div>
     </div>
   </section>
 
@@ -430,15 +457,30 @@ const COMPANIES = {
   "cadency":     { name: "CADENCY",     title: "Cadency",     logo: '<span class="crest" aria-hidden="true"></span>' },
   "mp-holdings": { name: "MP HOLDINGS", title: "MP Holdings", logo: '<span class="mp-mark" aria-hidden="true"></span>' }
 };
+// Each sign-in page: which company it belongs to and which encrypted entry it opens.
+const PORTALS = {
+  "cadency":   { company: "cadency",     vault: "cadency",     heading: "Executive Login", label: "Executive Portal" },
+  "mp-owner":  { company: "mp-holdings", vault: "mp-holdings", heading: "Owner Login",     label: "Owner Portal" },
+  "mp-tenant": { company: "mp-holdings", vault: "mp-tenants",  heading: "Tenant Login",    label: "Tenant Portal", perUser: true }
+};
+const ALIASES = { "mp-holdings": "mp-owner" };
 const VAULT = JSON.parse(document.getElementById("vault").textContent);
 const unlocked = {}; // decrypted portal HTML, kept in memory only
 
 const $ = id => document.getElementById(id);
 const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
 
 async function decryptPortal(id, username, password) {
-  const v = VAULT[id];
-  const secret = new TextEncoder().encode(username.trim().toLowerCase() + "\n" + password);
+  const portal = PORTALS[id];
+  const user = username.trim().toLowerCase();
+  let v = VAULT[portal.vault];
+  if (portal.perUser) {
+    const k = hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mp-tenant\n" + user)));
+    v = v && v[k];
+    if (!v) throw new Error("unknown user");
+  }
+  const secret = new TextEncoder().encode(user + "\n" + password);
   const base = await crypto.subtle.importKey("raw", secret, "PBKDF2", false, ["deriveKey"]);
   const key = await crypto.subtle.deriveKey(
     { name: "PBKDF2", salt: fromB64(v.salt), iterations: v.iterations, hash: "SHA-256" },
@@ -449,19 +491,20 @@ async function decryptPortal(id, username, password) {
 
 let current = "home";
 function show() {
-  const hash = location.hash.slice(1);
-  current = hash === "about" || COMPANIES[hash] ? hash : "home";
-  const isCompany = !!COMPANIES[current];
+  let hash = location.hash.slice(1);
+  if (ALIASES[hash]) { location.replace("#" + ALIASES[hash]); return; }
+  current = hash === "about" || PORTALS[hash] ? hash : "home";
+  const isPortal = !!PORTALS[current];
   $("view-home").hidden = current !== "home";
   $("view-about").hidden = current !== "about";
-  $("view-company").hidden = !isCompany;
+  $("view-company").hidden = !isPortal;
   document.querySelectorAll("nav a").forEach(a => {
-    const on = a.dataset.view === current || (isCompany && a.dataset.view === "home");
+    const on = a.dataset.view === current || (isPortal && a.dataset.view === "home");
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
 
-  if (isCompany) {
-    const c = COMPANIES[current];
+  if (isPortal) {
+    const portal = PORTALS[current], c = COMPANIES[portal.company];
     const open = !!unlocked[current];
     $("login").hidden = open;
     $("portal").hidden = !open;
@@ -469,14 +512,15 @@ function show() {
       $("portal-logo").innerHTML = c.logo;
       $("portal-name").textContent = c.title;
       $("portal-content").innerHTML = unlocked[current];
-      document.title = c.title + " · Executive Portal";
+      document.title = c.title + " · " + portal.label;
     } else {
       $("login-logo").innerHTML = c.logo;
       $("login-name").textContent = c.name;
+      $("login-title").textContent = portal.heading;
       $("login-error").textContent = "";
       $("login-form").reset();
       $("portal-content").innerHTML = "";
-      document.title = c.title + " · Executive Login";
+      document.title = c.title + " · " + portal.heading;
     }
   } else {
     $("portal-content").innerHTML = "";

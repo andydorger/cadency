@@ -4,8 +4,8 @@
 // and embeds the logos as data URIs.
 // Usage: node tools/build.mjs
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { renderPortfolio } from "./render-portfolio.mjs";
-import { webcrypto as crypto } from "node:crypto";
+import { renderPortfolio, renderTenant } from "./render-portfolio.mjs";
+import { webcrypto as crypto, createHash } from "node:crypto";
 
 const ITERATIONS = 600000;
 const root = new URL("..", import.meta.url).pathname;
@@ -27,12 +27,26 @@ async function encrypt(html, username, password) {
 
 const logins = JSON.parse(read("secrets.json"));
 const vault = {};
-for (const [id, { username, password }] of Object.entries(logins)) {
+const { tenants = {}, ...portalLogins } = logins;
+for (const [id, { username, password }] of Object.entries(portalLogins)) {
   // A portal with a data file (portals/<id>.json) is rendered from it; otherwise portals/<id>.html is used as is.
   const html = existsSync(root + `portals/${id}.json`)
     ? renderPortfolio(JSON.parse(read(`portals/${id}.json`)), logins[id].title || id)
     : read(`portals/${id}.html`).toString();
   vault[id] = await encrypt(html, username, password);
+}
+
+// Tenant portals: one encrypted page per unit, filed under a hash of the username so the
+// page knows which entry to try without listing usernames in the clear.
+const userKey = u => createHash("sha256").update("mp-tenant\n" + u.trim().toLowerCase()).digest("hex");
+if (Object.keys(tenants).length) {
+  const data = JSON.parse(read("portals/mp-holdings.json"));
+  vault["mp-tenants"] = {};
+  for (const p of data.properties) for (const u of p.units || []) {
+    const login = tenants[u.unit];
+    if (!login) continue;
+    vault["mp-tenants"][userKey(login.username)] = await encrypt(renderTenant(data, p, u), login.username, login.password);
+  }
 }
 
 const out = read("src/site.html").toString()
@@ -41,4 +55,4 @@ const out = read("src/site.html").toString()
   .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"))
   .replace("{{VAULT}}", JSON.stringify(vault));
 writeFileSync(root + "index.html", out);
-console.log("Built index.html with portals:", Object.keys(vault).join(", "));
+console.log("Built index.html with portals:", Object.keys(vault).join(", "), "| tenant units:", Object.keys(vault["mp-tenants"] || {}).length);
