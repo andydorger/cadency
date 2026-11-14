@@ -155,7 +155,7 @@ function property(p) {
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
       ])}
-      ${p.market ? `<p class="footnote">* Based on the ${esc(p.market.source)} market estimate (${monthYear(p.market.date)}) minus the estimated loan balance.</p>` : ""}
+      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(p.market.source)} market estimate of ${usd(p.market.value)} (${monthYear(p.market.date)}) minus the loan balance of ${usd(c.balance)}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""}</p>` : ""}
     </section>
     <section class="panel">
       <h4>Financing</h4>
@@ -192,8 +192,10 @@ export function renderPortfolio(data, title) {
   const T = f => total(ps.map(f));
   const anyMarket = ps.some(({ p }) => p.market);
   const marketDates = [...new Set(ps.filter(({ p }) => p.market).map(({ p }) => `${p.market.source}, ${monthYear(p.market.date)}`))];
-  const equityNote = anyMarket ? `<p class="footnote">* Equity is the latest market estimate (${esc(marketDates.join("; "))}) minus the estimated loan balance.</p>` : "";
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
+  const purchaseTotal = T(x => x.p.purchasePrice);
+  const marketTotal = total(ps.map(({ p }) => p.market && has(p.market.value) ? p.market.value : p.estimatedValue));
+  const equityNote = anyMarket ? `<p class="footnote">* Equity is the latest market estimates (${esc(marketDates.join("; "))}) of ${usd(marketTotal)} minus loan balances of ${usd(balance)}.${has(purchaseTotal) && has(balance) ? ` Based on purchase prices of ${usd(purchaseTotal)}, equity would be ${usd(purchaseTotal - balance)}.` : ""}</p>` : "";
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const market = T(x => x.p.market ? x.p.market.value : null);
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
