@@ -31,6 +31,14 @@ function amortizedBalance(original, ratePct, termYears, n) {
 export function loanBalance(loan) {
   if (!loan) return null;
   if (has(loan.balance)) return { value: loan.balance, estimated: false };
+  // From a lender statement: start at its principal balance and apply each scheduled payment
+  // due since then (loan.statement.nextDue is the first payment not yet reflected, "YYYY-MM").
+  const s = loan.statement;
+  if (s && has(s.balance) && s.nextDue && all(loan.rate, loan.payment)) {
+    const r = loan.rate / 100 / 12, k = paymentsMade(s.nextDue);
+    const value = k ? Math.max(0, s.balance * Math.pow(1 + r, k) - loan.payment * (Math.pow(1 + r, k) - 1) / r) : s.balance;
+    return { value, estimated: k > 0, fromStatement: s.date };
+  }
   if (all(loan.original, loan.rate, loan.termYears) && loan.firstPayment)
     return { value: amortizedBalance(loan.original, loan.rate, loan.termYears, paymentsMade(loan.firstPayment)), estimated: true };
   return null;
@@ -75,7 +83,7 @@ function calc(p) {
   const equityBase = has(mv(p)) ? mv(p) : p.estimatedValue;
   const equity = all(equityBase, balance) ? equityBase - balance : null;
   return {
-    rent, income, debt, mortgageDebt, helocPayment, expenses, cashFlow, balance, mortgageBalance, helocBalance, equity, balanceEstimated: !!(lb && lb.estimated),
+    rent, income, debt, mortgageDebt, helocPayment, expenses, cashFlow, balance, mortgageBalance, helocBalance, equity, balanceEstimated: !!(lb && lb.estimated), balanceFrom: lb && lb.fromStatement,
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
     cashOnCash: has(cashFlow) && has(invested) && invested > 0 ? (cashFlow * 12 / invested) * 100 : null,
     // Loan to value uses the same basis as equity: the market estimate when there is one.
@@ -122,7 +130,9 @@ function property(p) {
     ["Lender", l.lender ? esc(l.lender) : NA],
     ["Original loan", usd(l.original)],
     l.loanType ? ["Loan type", esc(l.loanType)] : null,
-    ["Current balance", has(c.mortgageBalance) ? usd(c.mortgageBalance) + (c.balanceEstimated ? ` <span class="sub">(est.)</span>` : "") : NA],
+    ["Current balance", has(c.mortgageBalance) ? usd(c.mortgageBalance) + (c.balanceFrom
+        ? ` <span class="sub">(${c.balanceEstimated ? "from" : "per"} ${date(c.balanceFrom)} statement${c.balanceEstimated ? ", after scheduled payments since" : ""})</span>`
+        : c.balanceEstimated ? ` <span class="sub">(est. from loan schedule)</span>` : "") : NA],
     ["Interest rate", has(l.rate) ? pct(l.rate, 3).replace(/0%$/, "%") + (l.rateType ? " " + esc(l.rateType) : "") : NA],
     ["Term", has(l.termYears) ? `${l.termYears} years${maturityYear ? `, matures ${maturityYear}` : ""}` : NA],
     ["Principal and interest", usd(l.payment)],
