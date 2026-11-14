@@ -3,7 +3,8 @@
 // encrypts each portal with AES-256-GCM using a key derived from its username and password (PBKDF2-SHA256),
 // and embeds the logos as data URIs.
 // Usage: node tools/build.mjs
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { renderPortfolio } from "./render-portfolio.mjs";
 import { webcrypto as crypto } from "node:crypto";
 
 const ITERATIONS = 600000;
@@ -27,7 +28,11 @@ async function encrypt(html, username, password) {
 const logins = JSON.parse(read("secrets.json"));
 const vault = {};
 for (const [id, { username, password }] of Object.entries(logins)) {
-  vault[id] = await encrypt(read(`portals/${id}.html`).toString(), username, password);
+  // A portal with a data file (portals/<id>.json) is rendered from it; otherwise portals/<id>.html is used as is.
+  const html = existsSync(root + `portals/${id}.json`)
+    ? renderPortfolio(JSON.parse(read(`portals/${id}.json`)), logins[id].title || id)
+    : read(`portals/${id}.html`).toString();
+  vault[id] = await encrypt(html, username, password);
 }
 
 const out = read("src/site.html").toString()

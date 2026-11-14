@@ -23,6 +23,7 @@
   --rule: #d9d4c7;
   --crest: #0f213a;
   --danger: #8a2a2a;
+  --ok: #2f6b4a; --ok-bg: #e3eee6; --warn: #8a6216; --warn-bg: #f4ead3; --bad: #9a2f2f; --bad-bg: #f5e1de;
   --display: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
   --text: "EB Garamond", Garamond, Georgia, "Times New Roman", serif;
   --measure: 36rem;
@@ -30,12 +31,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
-    --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; color-scheme: dark;
+    --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
-  --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; color-scheme: dark;
+  --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -221,6 +222,64 @@ form .button { width: 100%; }
 .portal li a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
 .portal li a:hover { text-decoration-color: var(--brass); }
 
+/* Portfolio (MP Holdings) */
+.portal .sample-note { font-style: italic; color: var(--warn); font-size: 1rem; }
+.tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.tiles div { display: grid; gap: .35rem; align-content: start; padding: 1.1rem 1rem 1.2rem; min-width: 0; }
+.tiles div + div { border-left: 1px solid var(--rule); }
+.tiles > div > span { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.tiles strong { font-family: var(--display); font-weight: 500; font-size: clamp(1.35rem, 2.4vw, 1.75rem); line-height: 1.1; font-variant-numeric: lining-nums tabular-nums; overflow-wrap: anywhere; }
+.tiles small { font-size: .9rem; color: var(--muted); }
+.tiles .key { background: var(--paper-2); }
+.tiles .key > span { color: var(--brass); }
+.block { display: grid; gap: 1.1rem; }
+.block > h3 { font-size: 1.5rem; }
+.scroll { overflow-x: auto; }
+.portal table { width: 100%; border-collapse: collapse; font-size: 1rem; font-variant-numeric: lining-nums tabular-nums; }
+.portal th { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+.portal td { padding: .65rem .75rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.portal td:first-child, .portal th:first-child { padding-left: 0; }
+.portal td:last-child, .portal th:last-child { padding-right: 0; }
+.portal .num { text-align: right; }
+.portal tfoot td { border-bottom: 0; border-top: 1px solid var(--ink); font-weight: 500; color: var(--ink); }
+.portal .strong { font-weight: 500; color: var(--ink); }
+.portal .neg { color: var(--bad); }
+.ledger-table td { color: var(--ink-soft); }
+.maint td:nth-child(2) { white-space: normal; min-width: 12rem; }
+
+.properties { display: grid; border-top: 1px solid var(--ink); }
+.property { border-bottom: 1px solid var(--rule); }
+.property summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.15rem 0; }
+.property summary::-webkit-details-marker { display: none; }
+.property summary::before { content: ""; flex: none; width: 7px; height: 7px; border-right: 1px solid var(--brass); border-bottom: 1px solid var(--brass); transform: rotate(-45deg); transition: transform .2s; margin-right: .25rem; }
+.property[open] summary::before { transform: rotate(45deg); }
+.property summary:hover strong { text-decoration: underline; text-decoration-color: var(--brass); text-underline-offset: 5px; }
+.property summary:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.p-name { display: grid; gap: .1rem; flex: 1; min-width: 0; }
+.p-name strong { font-family: var(--display); font-weight: 500; font-size: 1.4rem; line-height: 1.2; }
+.p-name span { color: var(--muted); font-size: 1rem; }
+.p-flow { display: grid; justify-items: end; gap: .1rem; font-size: 1.15rem; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.p-flow > span:first-child { font-family: var(--display); font-size: .7rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.p-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem 3rem; padding: .5rem 0 2.25rem 1.6rem; }
+.panel { display: grid; gap: .6rem; align-content: start; min-width: 0; }
+.panel.wide { grid-column: 1 / -1; }
+.panel h4 { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--brass); margin: 0; }
+.facts { margin: 0; display: grid; }
+.facts div { display: flex; justify-content: space-between; gap: 1rem; padding: .4rem 0; border-bottom: 1px dotted var(--rule); font-size: 1rem; }
+.facts dt { color: var(--ink-soft); }
+.facts dd { margin: 0; text-align: right; color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
+.facts .sub { color: var(--muted); }
+.facts .total { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); margin-top: .2rem; }
+.facts .total dt, .facts .total dd { font-weight: 500; color: var(--ink); }
+.months { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
+.months li { display: grid; gap: .35rem; justify-items: center; text-align: center; padding: .7rem .25rem; border: 1px solid var(--rule); }
+.months .m { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.chip { font-size: .85rem; padding: .1rem .55rem; border-radius: 999px; white-space: nowrap; }
+.chip.paid { color: var(--ok); background: var(--ok-bg); }
+.chip.late { color: var(--warn); background: var(--warn-bg); }
+.chip.due { color: var(--ink-soft); background: var(--paper-2); }
+.chip.unpaid { color: var(--bad); background: var(--bad-bg); font-weight: 500; }
+
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
 .heraldry p { color: var(--ink-soft); font-size: 1.05rem; }
@@ -243,6 +302,14 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
   .entrance .mp-mark { width: 12rem; }
   .entrance .name { font-size: 1.45rem; }
   .portal .sections { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tiles div + div { border-left: 0; }
+  .tiles div:nth-child(even) { border-left: 1px solid var(--rule); }
+  .tiles div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .tiles .key { grid-column: 1 / -1; border-left: 0 !important; }
+  .p-body { grid-template-columns: 1fr; padding-left: 0; gap: 1.75rem; }
+  .months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .p-name strong { font-size: 1.2rem; }
   nav ul { gap: .25rem 1.4rem; }
   nav a { font-size: .8rem; letter-spacing: .18em; }
   form { padding: 1.75rem 1.25rem; }
