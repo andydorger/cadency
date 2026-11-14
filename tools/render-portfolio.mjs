@@ -145,6 +145,7 @@ function property(p) {
         ["Purchased", date(p.purchaseDate)],
         ["Closing costs", usd(p.closingCosts)],
         ["Estimated value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
+        p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity", usd(c.equity)]
       ])}
