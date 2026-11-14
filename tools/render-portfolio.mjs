@@ -188,7 +188,9 @@ function property(p) {
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
       ])}
-      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(mvLabel(p).replace(/^./, ch => ch.toUpperCase()))}, ${usd(mv(p))} (${monthYear(p.market.date)}), minus ${p.heloc ? `the mortgage balance of ${usd(c.mortgageBalance)} and HELOC balance of ${usd(c.helocBalance)}` : `the loan balance of ${usd(c.balance)}`}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""} Loan to value uses the same market estimate${has(p.purchasePrice) ? ` (${pct(c.balance / p.purchasePrice * 100)} at the purchase price)` : ""}.</p>` : ""}
+      ${p.market && has(c.balance) ? `<p class="footnote">* ${floorApplies(p)
+        ? `Owners' minimum value of ${usd(mv(p))}, used because the ${esc(rawLabel(p))} (${usd(rawMv(p))}, ${monthYear(p.market.date)}) is below it,`
+        : `${esc(rawLabel(p).replace(/^./, ch => ch.toUpperCase()))}, ${usd(mv(p))} (${monthYear(p.market.date)}),`} minus ${p.heloc ? `the mortgage balance of ${usd(c.mortgageBalance)} and HELOC balance of ${usd(c.helocBalance)}` : `the loan balance of ${usd(c.balance)}`}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""} Loan to value uses the same market estimate${has(p.purchasePrice) ? ` (${pct(c.balance / p.purchasePrice * 100)} at the purchase price)` : ""}.</p>` : ""}
     </section>
     <section class="panel">
       <h4>Financing</h4>
