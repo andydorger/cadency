@@ -42,14 +42,17 @@ function calc(p) {
   const debt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.mi || 0) + (loan.escrow || 0) : null);
   const expList = Object.values(p.expenses || {});
   const expenses = p.expenses && expList.length && expList.every(v => v === 0 || has(v)) ? expList.reduce((a, b) => a + b, 0) : null;
-  const cashFlow = all(rent, debt, expenses) ? rent - debt - expenses : null;
+  const otherList = Object.values(p.otherIncome || {});
+  const other = otherList.every(has) ? otherList.reduce((a, b) => a + b, 0) : null;
+  const income = all(rent, other) ? rent + other : null;
+  const cashFlow = all(income, debt, expenses) ? income - debt - expenses : null;
   const lb = loanBalance(loan);
   const balance = noLoan ? 0 : (lb ? lb.value : null);
   const original = noLoan ? 0 : (loan && has(loan.original) ? loan.original : null);
   const invested = all(p.purchasePrice, original) ? p.purchasePrice - original + (p.closingCosts || 0) : null;
   const equity = all(p.estimatedValue, balance) ? p.estimatedValue - balance : null;
   return {
-    rent, debt, expenses, cashFlow, balance, equity, balanceEstimated: !!(lb && lb.estimated),
+    rent, income, debt, expenses, cashFlow, balance, equity, balanceEstimated: !!(lb && lb.estimated),
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
     cashOnCash: has(cashFlow) && has(invested) && invested > 0 ? (cashFlow * 12 / invested) * 100 : null,
     ltv: has(balance) && has(p.estimatedValue) && p.estimatedValue ? (balance / p.estimatedValue) * 100 : null,
@@ -109,6 +112,7 @@ function property(p) {
   const rentRows = p.units
     ? p.units.map(u => `<div><dt>Rent, ${esc(u.unit)}</dt><dd>${usd(u.rent)}</dd></div>`).join("")
     : `<div><dt>Rent</dt><dd>${usd(c.rent)}</dd></div>`;
+  const otherRows = Object.entries(p.otherIncome || {}).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${usd(v)}</dd></div>`).join("");
   const debtRows = l && (l.mi || l.escrow)
     ? `<div><dt>Mortgage principal and interest</dt><dd>${neg(l.payment)}</dd></div>`
       + (l.mi ? `<div><dt>Mortgage insurance</dt><dd>${neg(l.mi)}</dd></div>` : "")
@@ -117,6 +121,7 @@ function property(p) {
   const cashflow = (has(c.rent) || p.units || expRows.length || has(c.debt)) ? `
       <dl class="facts ledger">
         ${rentRows}
+        ${otherRows}
         ${debtRows}
         ${expRows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${neg(v)}</dd></div>`).join("")}
         ${expRows.length ? "" : `<div><dt>Operating expenses</dt><dd>${NA}</dd></div>`}
@@ -177,7 +182,7 @@ export function renderPortfolio(data, title) {
   const ps = data.properties.map(p => ({ p, c: calc(p) }));
   const T = f => total(ps.map(f));
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
-  const rent = T(x => x.c.rent), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
+  const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
@@ -203,8 +208,8 @@ export function renderPortfolio(data, title) {
     <h3>Monthly cash flow by property</h3>
     <div class="scroll">
       <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Rent</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
-        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.rent)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
+        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
     </div>
