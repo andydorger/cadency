@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadency</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Cadency is a private holding company.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Layout: a quiet clubhouse page. Centered crest masthead, two framed entrances on the landing page, hairline brass rules, wide-tracked capitals. */
+:root {
+  --paper: #f8f7f3;
+  --paper-2: #efede6;
+  --ink: #0f213a;
+  --ink-soft: #3c4a5e;
+  --muted: #6b7584;
+  --brass: #9b7d4e;
+  --gold: #b8955a;
+  --rule: #d9d4c7;
+  --crest: #0f213a;
+  --danger: #8a2a2a;
+  --display: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
+  --text: "EB Garamond", Garamond, Georgia, "Times New Roman", serif;
+  --measure: 36rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
+    --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
+  --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: 1.1875rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.wrap {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Logos, drawn as masks so they take the theme's ink */
+.crest {
+  display: block;
+  aspect-ratio: 455 / 592;
+  max-width: 100%;
+  background: var(--crest);
+  -webkit-mask: url("{{CADENCY_CREST}}") center / contain no-repeat;
+          mask: url("{{CADENCY_CREST}}") center / contain no-repeat;
+}
+.mp-mark { display: block; position: relative; aspect-ratio: 360 / 207; max-width: 100%; }
+.mp-mark::before, .mp-mark::after { content: ""; position: absolute; inset: 0; }
+.mp-mark::before {
+  background: var(--crest);
+  -webkit-mask: url("{{MP_INK}}") center / contain no-repeat;
+          mask: url("{{MP_INK}}") center / contain no-repeat;
+}
+.mp-mark::after {
+  background: var(--gold);
+  -webkit-mask: url("{{MP_GOLD}}") center / contain no-repeat;
+          mask: url("{{MP_GOLD}}") center / contain no-repeat;
+}
+
+/* Masthead */
+.masthead { border-bottom: 1px solid var(--rule); }
+.masthead .wrap { display: grid; justify-items: center; gap: 1.1rem; padding-block: 2rem 1.25rem; }
+.brand { display: grid; justify-items: center; gap: .6rem; color: inherit; text-decoration: none; }
+.brand .crest { width: 2.6rem; }
+.wordmark {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 1.5rem;
+  letter-spacing: .42em;
+  margin-right: -.42em; /* optical centering for tracked caps */
+  line-height: 1;
+}
+nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem 2.25rem; }
+nav a {
+  font-family: var(--display);
+  font-size: .9rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding-block: .35rem;
+  border-bottom: 1px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+nav a:hover { color: var(--ink); border-bottom-color: var(--rule); }
+nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--brass); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+/* Shared type */
+main { padding-block: 4rem 5rem; }
+.eyebrow {
+  font-family: var(--display);
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0 0 1rem;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 500; text-wrap: balance; margin: 0; color: var(--ink); }
+h1 { font-size: clamp(2.4rem, 5.5vw, 3.6rem); line-height: 1.08; letter-spacing: .005em; }
+h2 { font-size: clamp(1.6rem, 3.2vw, 2.1rem); line-height: 1.15; }
+h3 { font-size: 1.4rem; line-height: 1.2; }
+p { margin: 0; }
+.prose { max-width: var(--measure); margin-inline: auto; display: grid; gap: 1.25rem; color: var(--ink-soft); }
+.prose .lede { font-size: 1.35rem; line-height: 1.55; color: var(--ink); }
+.page-head { text-align: center; display: grid; justify-items: center; gap: .25rem; margin-bottom: 3rem; }
+.ornament { display: flex; align-items: center; justify-content: center; gap: .9rem; color: var(--brass); margin-block: 2.75rem; }
+.ornament::before, .ornament::after { content: ""; height: 1px; width: 4.5rem; background: var(--rule); }
+.ornament span { width: 6px; height: 6px; transform: rotate(45deg); border: 1px solid currentColor; }
+
+.button {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: .9rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  background: transparent;
+  padding: .85rem 1.6rem .8rem;
+  cursor: pointer;
+  transition: background .25s, color .25s;
+}
+.button:hover { background: var(--ink); color: var(--paper); }
+.button[disabled] { opacity: .6; cursor: progress; }
+.link {
+  font-family: var(--display); font-size: .85rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none; background: none; border: 0; padding: .25rem 0; cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+}
+.link:hover { color: var(--ink); border-bottom-color: var(--brass); }
+
+/* Landing: two entrances */
+.landing-head { text-align: center; display: grid; justify-items: center; gap: .9rem; margin-bottom: 3rem; }
+.landing-head .motto { font-style: italic; font-size: 1.3rem; color: var(--ink-soft); max-width: 30rem; }
+.entrances { max-width: 52rem; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+.entrance {
+  display: grid;
+  grid-template-rows: 11rem auto auto auto;
+  justify-items: center;
+  align-items: end;
+  gap: 1.1rem;
+  text-align: center;
+  padding: 2.75rem 1.5rem 2.25rem;
+  border: 1px solid var(--rule);
+  outline: 1px solid var(--rule);
+  outline-offset: -8px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .25s, outline-color .25s, background .25s;
+}
+.entrance:hover { border-color: var(--brass); outline-color: var(--brass); background: var(--paper-2); }
+.entrance:focus-visible { outline: 2px solid var(--brass); outline-offset: -8px; }
+.entrance .crest { height: 10.5rem; width: auto; }
+.entrance .mp-mark { width: 15rem; }
+.entrance .name { font-family: var(--display); font-weight: 500; font-size: 1.7rem; letter-spacing: .3em; margin-right: -.3em; line-height: 1.1; }
+.entrance .eyebrow { margin: 0; color: var(--muted); }
+.entrance .go { font-family: var(--display); font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--ink); padding: .7rem 1.4rem .65rem; margin-top: .4rem; transition: background .25s, color .25s; }
+.entrance:hover .go { background: var(--ink); color: var(--paper); }
+
+/* Login */
+.login { max-width: 26rem; margin: 0 auto; display: grid; gap: 2rem; }
+.login-head { display: grid; justify-items: center; gap: 1rem; text-align: center; }
+.login-head .crest { height: 6.5rem; width: auto; }
+.login-head .mp-mark { width: 10rem; }
+.login-head .name { font-family: var(--display); font-weight: 500; font-size: 1.35rem; letter-spacing: .3em; margin-right: -.3em; line-height: 1.1; }
+form { display: grid; gap: 1.4rem; padding: 2rem 1.75rem; border-top: 1px solid var(--brass); background: var(--paper-2); }
+.field { display: grid; gap: .35rem; }
+.field label { font-family: var(--display); font-size: .8rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); }
+.field input {
+  font: inherit; font-size: 1.1rem; color: var(--ink); background: transparent;
+  border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; padding: .45rem 0; width: 100%;
+}
+.field input:focus { border-color: var(--ink); outline: none; }
+.form-error { color: var(--danger); font-size: 1rem; font-style: italic; }
+.form-error:empty { display: none; }
+form .button { width: 100%; }
+.login-foot { text-align: center; }
+
+/* Portal (content arrives decrypted) */
+.portal-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1.25rem; margin-bottom: 3rem; border-bottom: 1px solid var(--rule); }
+.portal-bar .who { display: flex; align-items: center; gap: .9rem; min-width: 0; }
+.portal-bar .crest { height: 2.6rem; width: auto; }
+.portal-bar .mp-mark { width: 4.5rem; }
+.portal-bar .name { font-family: var(--display); font-weight: 600; font-size: .9rem; letter-spacing: .24em; text-transform: uppercase; }
+.portal { display: grid; gap: 3rem; }
+.portal .intro { max-width: var(--measure); display: grid; gap: .9rem; }
+.portal .intro p { color: var(--ink-soft); }
+.portal .sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.25rem 3rem; }
+.portal section { display: grid; gap: .75rem; align-content: start; padding-top: 1.1rem; border-top: 1px solid var(--ink); }
+.portal section h3 { font-size: 1.3rem; }
+.portal .empty { color: var(--muted); font-style: italic; font-size: 1rem; }
+.portal ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+.portal li a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.portal li a:hover { text-decoration-color: var(--brass); }
+
+/* About */
+.heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
+.heraldry p { color: var(--ink-soft); font-size: 1.05rem; }
+.heraldry .eyebrow { margin-bottom: .6rem; }
+
+/* Footer */
+footer { border-top: 1px solid var(--rule); }
+footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem 2rem; font-family: var(--display); font-size: .85rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+
+.view { animation: rise .6s ease both; }
+@keyframes rise { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .view { animation: none; } * { transition: none !important; } }
+
+@media (max-width: 720px) {
+  body { font-size: 1.125rem; }
+  main { padding-block: 3rem 3.5rem; }
+  .entrances { grid-template-columns: 1fr; gap: 1.5rem; }
+  .entrance { grid-template-rows: 8.5rem auto auto auto; padding: 2.25rem 1.25rem 2rem; }
+  .entrance .crest { height: 8rem; }
+  .entrance .mp-mark { width: 12rem; }
+  .entrance .name { font-size: 1.45rem; }
+  .portal .sections { grid-template-columns: 1fr; }
+  nav ul { gap: .25rem 1.4rem; }
+  nav a { font-size: .8rem; letter-spacing: .18em; }
+  form { padding: 1.75rem 1.25rem; }
+  .heraldry { padding: 1.5rem 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Cadency, home">
+      <span class="crest" aria-hidden="true"></span>
+      <span class="wordmark">CADENCY</span>
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="#" data-view="home">Executive Access</a></li>
+        <li><a href="#about" data-view="about">About Us</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- LANDING -->
+  <section class="view" id="view-home" aria-labelledby="home-title">
+    <div class="landing-head">
+      <p class="eyebrow">Executive Access</p>
+      <h1 id="home-title">Select your company</h1>
+      <p class="motto">A private holding company. Value creation for enduring businesses.</p>
+    </div>
+    <div class="entrances">
+      <a class="entrance" href="#cadency">
+        <span class="crest" role="img" aria-label="Cadency crest"></span>
+        <span class="name">CADENCY</span>
+        <span class="eyebrow">Executive Login</span>
+        <span class="go">Sign In</span>
+      </a>
+      <a class="entrance" href="#mp-holdings">
+        <span class="mp-mark" role="img" aria-label="MP Holdings mark: a top hat, monocle and moustache above a house"></span>
+        <span class="name">MP HOLDINGS</span>
+        <span class="eyebrow">Executive Login</span>
+        <span class="go">Sign In</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- LOGIN / PORTAL (filled per company) -->
+  <section class="view" id="view-company" aria-labelledby="login-title" hidden>
+    <div class="login" id="login">
+      <div class="login-head">
+        <span id="login-logo"></span>
+        <span class="name" id="login-name"></span>
+        <h2 id="login-title">Executive Login</h2>
+      </div>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="f-user">Username</label>
+          <input id="f-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </div>
+        <div class="field">
+          <label for="f-pass">Password</label>
+          <input id="f-pass" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="form-error" id="login-error" role="alert"></p>
+        <button class="button" type="submit" id="login-submit">Sign In</button>
+      </form>
+      <p class="login-foot"><a class="link" href="#">Back to companies</a></p>
+    </div>
+
+    <div id="portal" hidden>
+      <div class="portal-bar">
+        <div class="who"><span id="portal-logo"></span><span class="name" id="portal-name"></span></div>
+        <button class="link" type="button" id="sign-out">Sign Out</button>
+      </div>
+      <div id="portal-content"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT US -->
+  <section class="view" id="view-about" aria-labelledby="about-title" hidden>
+    <div class="page-head">
+      <p class="eyebrow">About Us</p>
+      <h1 id="about-title">Operators and investors</h1>
+    </div>
+    <div class="prose">
+      <p class="lede">Cadency is a private holding company. We are operators and investors: we invest our own capital and stay involved in running the businesses we own.</p>
+    </div>
+    <div class="ornament" aria-hidden="true"><span></span></div>
+    <aside class="heraldry" aria-labelledby="name-title">
+      <p class="eyebrow" id="name-title">On the name</p>
+      <p>In heraldry, cadency is the system that marks each son of a family on the shared coat of arms. The eldest bears the <em>label</em>, the bar of three points across the head of our shield. Below it sits the talbot, the old English hound, kept for loyalty and a long memory. Together they describe what we intend to be: one house, carried forward with care.</p>
+    </aside>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Cadency</span>
+    <span>Private Holding Company</span>
+    <span>&copy; <span id="year">2026</span></span>
+  </div>
+</footer>
+
+<!-- Encrypted portal content. Each portal unlocks only with its username and password. -->
+<script type="application/json" id="vault">{{VAULT}}</script>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const COMPANIES = {
+  "cadency":     { name: "CADENCY",     title: "Cadency",     logo: '<span class="crest" aria-hidden="true"></span>' },
+  "mp-holdings": { name: "MP HOLDINGS", title: "MP Holdings", logo: '<span class="mp-mark" aria-hidden="true"></span>' }
+};
+const VAULT = JSON.parse(document.getElementById("vault").textContent);
+const unlocked = {}; // decrypted portal HTML, kept in memory only
+
+const $ = id => document.getElementById(id);
+const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function decryptPortal(id, username, password) {
+  const v = VAULT[id];
+  const secret = new TextEncoder().encode(username.trim().toLowerCase() + "\n" + password);
+  const base = await crypto.subtle.importKey("raw", secret, "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: fromB64(v.salt), iterations: v.iterations, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(v.iv) }, key, fromB64(v.data));
+  return new TextDecoder().decode(plain);
+}
+
+let current = "home";
+function show() {
+  const hash = location.hash.slice(1);
+  current = hash === "about" || COMPANIES[hash] ? hash : "home";
+  const isCompany = !!COMPANIES[current];
+  $("view-home").hidden = current !== "home";
+  $("view-about").hidden = current !== "about";
+  $("view-company").hidden = !isCompany;
+  document.querySelectorAll("nav a").forEach(a => {
+    const on = a.dataset.view === current || (isCompany && a.dataset.view === "home");
+    if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+
+  if (isCompany) {
+    const c = COMPANIES[current];
+    const open = !!unlocked[current];
+    $("login").hidden = open;
+    $("portal").hidden = !open;
+    if (open) {
+      $("portal-logo").innerHTML = c.logo;
+      $("portal-name").textContent = c.title;
+      $("portal-content").innerHTML = unlocked[current];
+      document.title = c.title + " · Executive Portal";
+    } else {
+      $("login-logo").innerHTML = c.logo;
+      $("login-name").textContent = c.name;
+      $("login-error").textContent = "";
+      $("login-form").reset();
+      $("portal-content").innerHTML = "";
+      document.title = c.title + " · Executive Login";
+    }
+  } else {
+    $("portal-content").innerHTML = "";
+    document.title = current === "about" ? "Cadency · About Us" : "Cadency";
+  }
+  window.scrollTo(0, 0);
+}
+
+$("login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = current, user = $("f-user").value, pass = $("f-pass").value;
+  if (!user.trim() || !pass) {
+    $("login-error").textContent = "Enter your username and password.";
+    (user.trim() ? $("f-pass") : $("f-user")).focus();
+    return;
+  }
+  const btn = $("login-submit");
+  btn.disabled = true; btn.textContent = "Signing In…";
+  $("login-error").textContent = "";
+  try {
+    unlocked[id] = await decryptPortal(id, user, pass);
+    show();
+  } catch {
+    $("login-error").textContent = "That username and password don't match. Please try again.";
+    $("f-pass").value = "";
+    $("f-pass").focus();
+  } finally {
+    btn.disabled = false; btn.textContent = "Sign In";
+  }
+});
+
+$("sign-out").addEventListener("click", () => {
+  delete unlocked[current];
+  location.hash = "";
+});
+
+window.addEventListener("hashchange", show);
+show();
+</script>
+</body>
+</html>

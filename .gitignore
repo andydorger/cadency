@@ -1,0 +1,3 @@
+# Plain-text portal content and logins. Never commit these: the repository is public.
+secrets.json
+portals/
