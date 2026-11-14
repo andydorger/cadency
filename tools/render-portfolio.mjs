@@ -40,7 +40,12 @@ function calc(p) {
   const loan = p.loan;
   const noLoan = loan === false;
   const rent = p.units ? total(p.units.map(u => u.rent)) : (has(p.rent) ? p.rent : null);
-  const debt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.mi || 0) + (loan.escrow || 0) : null);
+  const mortgageDebt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.mi || 0) + (loan.escrow || 0) : null);
+  // A home equity line of credit adds its monthly payment to debt service and its balance to what is owed.
+  const heloc = p.heloc || null;
+  const helocPayment = heloc && has(heloc.payment) ? heloc.payment : 0;
+  const helocBalance = heloc && has(heloc.balance) ? heloc.balance : 0;
+  const debt = has(mortgageDebt) ? mortgageDebt + helocPayment : null;
   const expList = Object.values(p.expenses || {});
   const expenses = p.expenses && expList.length && expList.every(v => v === 0 || has(v)) ? expList.reduce((a, b) => a + b, 0) : null;
   const otherList = [...Object.values(p.otherIncome || {}), ...(p.units || []).flatMap(u => Object.values(u.charges || {}))];
@@ -48,14 +53,15 @@ function calc(p) {
   const income = all(rent, other) ? rent + other : null;
   const cashFlow = all(income, debt, expenses) ? income - debt - expenses : null;
   const lb = loanBalance(loan);
-  const balance = noLoan ? 0 : (lb ? lb.value : null);
+  const mortgageBalance = noLoan ? 0 : (lb ? lb.value : null);
+  const balance = has(mortgageBalance) ? mortgageBalance + helocBalance : null;
   const original = noLoan ? 0 : (loan && has(loan.original) ? loan.original : null);
   const invested = all(p.purchasePrice, original) ? p.purchasePrice - original + (p.closingCosts || 0) : null;
   // Equity uses the latest market estimate (e.g. RentCast) when there is one, otherwise the recorded value.
   const equityBase = p.market && has(p.market.value) ? p.market.value : p.estimatedValue;
   const equity = all(equityBase, balance) ? equityBase - balance : null;
   return {
-    rent, income, debt, expenses, cashFlow, balance, equity, balanceEstimated: !!(lb && lb.estimated),
+    rent, income, debt, mortgageDebt, helocPayment, expenses, cashFlow, balance, mortgageBalance, helocBalance, equity, balanceEstimated: !!(lb && lb.estimated),
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
     cashOnCash: has(cashFlow) && has(invested) && invested > 0 ? (cashFlow * 12 / invested) * 100 : null,
     ltv: has(balance) && has(p.estimatedValue) && p.estimatedValue ? (balance / p.estimatedValue) * 100 : null,
@@ -101,15 +107,25 @@ function property(p) {
     ["Lender", l.lender ? esc(l.lender) : NA],
     ["Original loan", usd(l.original)],
     l.loanType ? ["Loan type", esc(l.loanType)] : null,
-    ["Current balance", has(c.balance) ? usd(c.balance) + (c.balanceEstimated ? ` <span class="sub">(est.)</span>` : "") : NA],
+    ["Current balance", has(c.mortgageBalance) ? usd(c.mortgageBalance) + (c.balanceEstimated ? ` <span class="sub">(est.)</span>` : "") : NA],
     ["Interest rate", has(l.rate) ? pct(l.rate, 3).replace(/0%$/, "%") + (l.rateType ? " " + esc(l.rateType) : "") : NA],
     ["Term", has(l.termYears) ? `${l.termYears} years${maturityYear ? `, matures ${maturityYear}` : ""}` : NA],
     ["Principal and interest", usd(l.payment)],
     l.mi ? ["Mortgage insurance", usd(l.mi) + (l.miNote ? ` <span class="sub">(${esc(l.miNote)})</span>` : "")] : null,
     l.escrow ? ["Escrow (taxes and insurance)", usd(l.escrow)] : null,
-    (l.mi || l.escrow) && has(c.debt) ? ["Total monthly payment", usd(c.debt)] : null,
-    ["Loan to value", pct(c.ltv)]
+    (l.mi || l.escrow) && has(c.mortgageDebt) ? ["Total monthly payment", usd(c.mortgageDebt)] : null,
+    ["Loan to value" + (p.heloc ? " (incl. HELOC)" : ""), pct(c.ltv)]
   ]);
+  const h = p.heloc;
+  if (h) financing += `
+      <p class="subhead">Home equity line of credit</p>
+      ${dl([
+        ["Lender", h.lender ? esc(h.lender) : NA],
+        ["Balance", usd(h.balance) + (h.asOf ? ` <span class="sub">(as of ${date(h.asOf)})</span>` : "")],
+        ["Credit limit", usd(h.limit) + (all(h.limit, h.balance) ? ` <span class="sub">(${usd(h.limit - h.balance)} available)</span>` : "")],
+        ["Interest rate", has(h.rate) ? pct(h.rate, 2) + (h.rateType ? " " + esc(h.rateType) : "") : NA],
+        ["Monthly payment", usd(h.payment) + (has(h.minimum) ? ` <span class="sub">(minimum due ${usd(h.minimum)}, interest only)</span>` : "")]
+      ])}`;
 
   const expRows = Object.entries(p.expenses || {}).filter(([, v]) => v !== 0);
   const rentRows = p.units
@@ -121,12 +137,14 @@ function property(p) {
     ? `<div><dt>Mortgage principal and interest</dt><dd>${neg(l.payment)}</dd></div>`
       + (l.mi ? `<div><dt>Mortgage insurance</dt><dd>${neg(l.mi)}</dd></div>` : "")
       + (l.escrow ? `<div><dt>Escrow (taxes and insurance)</dt><dd>${neg(l.escrow)}</dd></div>` : "")
-    : `<div><dt>Mortgage</dt><dd>${neg(c.debt)}</dd></div>`;
+    : `<div><dt>Mortgage</dt><dd>${neg(c.mortgageDebt)}</dd></div>`;
+  const helocRow = p.heloc ? `<div><dt>HELOC payment</dt><dd>${neg(p.heloc.payment)}</dd></div>` : "";
   const cashflow = (has(c.rent) || p.units || expRows.length || has(c.debt)) ? `
       <dl class="facts ledger">
         ${rentRows}
         ${otherRows}
         ${debtRows}
+        ${helocRow}
         ${expRows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${neg(v)}</dd></div>`).join("")}
         ${expRows.length ? "" : `<div><dt>Operating expenses</dt><dd>${NA}</dd></div>`}
         <div class="total"><dt>Cash flow after debt</dt><dd>${signed(c.cashFlow)}</dd></div>
@@ -155,7 +173,7 @@ function property(p) {
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
       ])}
-      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(p.market.source)} market estimate of ${usd(p.market.value)} (${monthYear(p.market.date)}) minus the loan balance of ${usd(c.balance)}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""}</p>` : ""}
+      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(p.market.source)} market estimate of ${usd(p.market.value)} (${monthYear(p.market.date)}) minus ${p.heloc ? `the mortgage balance of ${usd(c.mortgageBalance)} and HELOC balance of ${usd(c.helocBalance)}` : `the loan balance of ${usd(c.balance)}`}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""}</p>` : ""}
     </section>
     <section class="panel">
       <h4>Financing</h4>
