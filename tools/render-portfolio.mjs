@@ -137,7 +137,7 @@ function property(p) {
     ["Term", has(l.termYears) ? `${l.termYears} years${maturityYear ? `, matures ${maturityYear}` : ""}` : NA],
     ["Principal and interest", usd(l.payment)],
     l.mi ? ["Mortgage insurance", usd(l.mi) + (l.miNote ? ` <span class="sub">(${esc(l.miNote)})</span>` : "")] : null,
-    l.escrow ? ["Escrow (taxes and insurance)", usd(l.escrow)] : null,
+    l.escrow ? [`Escrow (${esc(l.escrowLabel || "taxes and insurance")})`, usd(l.escrow)] : null,
     (l.mi || l.escrow) && has(c.mortgageDebt) ? ["Total monthly payment", usd(c.mortgageDebt)] : null,
     ["Loan to value" + (p.heloc ? " (incl. HELOC)" : "") + (p.market ? "*" : ""), pct(c.ltv)]
   ]);
@@ -161,7 +161,7 @@ function property(p) {
   const debtRows = l && (l.mi || l.escrow)
     ? `<div><dt>Mortgage principal and interest</dt><dd>${neg(l.payment)}</dd></div>`
       + (l.mi ? `<div><dt>Mortgage insurance</dt><dd>${neg(l.mi)}</dd></div>` : "")
-      + (l.escrow ? `<div><dt>Escrow (taxes and insurance)</dt><dd>${neg(l.escrow)}</dd></div>` : "")
+      + (l.escrow ? `<div><dt>Escrow (${esc(l.escrowLabel || "taxes and insurance")})</dt><dd>${neg(l.escrow)}</dd></div>` : "")
     : `<div><dt>Mortgage</dt><dd>${neg(c.mortgageDebt)}</dd></div>`;
   const helocRow = p.heloc ? `<div><dt>HELOC payment</dt><dd>${neg(p.heloc.payment)}</dd></div>` : "";
   const cashflow = (has(c.rent) || p.units || expRows.length || has(c.debt)) ? `
