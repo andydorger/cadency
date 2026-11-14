@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cadency</title>
+<title>{{SITE_TITLE}}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Cadency is a private holding company.">
+<meta name="description" content="{{SITE_DESCRIPTION}}">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,6 +85,9 @@ body {
 .masthead .wrap { display: grid; justify-items: center; gap: 1.1rem; padding-block: 2rem 1.25rem; }
 .brand { display: grid; justify-items: center; gap: .6rem; color: inherit; text-decoration: none; }
 .brand .crest { width: 2.6rem; }
+.brand .mp-mark { width: 5.5rem; }
+.entrance.plain { grid-template-rows: auto auto auto; align-items: center; padding-block: 2.5rem 2.25rem; }
+.entrance.plain .lede { color: var(--ink-soft); font-size: 1.05rem; max-width: 18rem; }
 .wordmark {
   font-family: var(--display);
   font-weight: 500;
@@ -287,11 +290,6 @@ form .button { width: 100%; }
 .chip.unpaid { color: var(--bad); background: var(--bad-bg); font-weight: 500; }
 
 /* Tenant portal */
-.go-pair { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: .4rem; }
-.go-pair .go { margin-top: 0; text-decoration: none; }
-.go-pair .go:hover { background: var(--ink); color: var(--paper); }
-.entrance:has(.go-pair):hover .go { background: transparent; color: var(--ink); }
-.entrance:has(.go-pair):hover .go:hover { background: var(--ink); color: var(--paper); }
 .tenant-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem 3rem; }
 .pay-card { grid-row: span 2; display: grid; gap: .9rem; align-content: start; padding: 1.75rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
 .pay-card h3 { font-size: 1.5rem; }
@@ -331,7 +329,6 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
   .portal .sections { grid-template-columns: 1fr; }
   .tenant-grid { grid-template-columns: 1fr; gap: 2rem; }
   .pay-card { grid-row: auto; padding: 1.4rem 1.25rem; }
-  .go-pair .go { padding: .55rem .8rem .5rem; }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tiles div + div { border-left: 0; }
   .tiles div:nth-child(even) { border-left: 1px solid var(--rule); }
@@ -351,6 +348,7 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
 
 <header class="masthead">
   <div class="wrap">
+<!--@cadency-->
     <a class="brand" href="#" aria-label="Cadency, home">
       <span class="crest" aria-hidden="true"></span>
       <span class="wordmark">CADENCY</span>
@@ -361,12 +359,19 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
         <li><a href="#about" data-view="about">About Us</a></li>
       </ul>
     </nav>
+<!--@end--><!--@mp-->
+    <a class="brand" href="#" aria-label="MP Holdings, home">
+      <span class="mp-mark" aria-hidden="true"></span>
+      <span class="wordmark">MP HOLDINGS</span>
+    </a>
+<!--@end-->
   </div>
 </header>
 
 <main class="wrap">
 
   <!-- LANDING -->
+<!--@cadency-->
   <section class="view" id="view-home" aria-labelledby="home-title">
     <div class="landing-head">
       <p class="eyebrow" id="home-title">Executive Access</p>
@@ -379,17 +384,34 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
         <span class="eyebrow">Executive Login</span>
         <span class="go">Sign In</span>
       </a>
-      <div class="entrance">
+      <a class="entrance" href="#mp-owner">
         <span class="mp-mark" role="img" aria-label="MP Holdings mark: a top hat, monocle and moustache above a house"></span>
         <span class="name">MP HOLDINGS</span>
-        <span class="eyebrow">Owners and Tenants</span>
-        <span class="go-pair">
-          <a class="go" href="#mp-owner">Owner Login</a>
-          <a class="go" href="#mp-tenant">Tenant Login</a>
-        </span>
-      </div>
+        <span class="eyebrow">Owner Login</span>
+        <span class="go">Sign In</span>
+      </a>
     </div>
   </section>
+<!--@end--><!--@mp-->
+  <section class="view" id="view-home" aria-labelledby="home-title">
+    <div class="landing-head">
+      <p class="eyebrow" id="home-title">Welcome</p>
+      <p class="motto">Residential properties in Cincinnati, Ohio.</p>
+    </div>
+    <div class="entrances">
+      <a class="entrance plain" href="#mp-owner">
+        <span class="name">OWNERS</span>
+        <span class="lede">Portfolio, financing and property records.</span>
+        <span class="go">Owner Login</span>
+      </a>
+      <a class="entrance plain" href="#mp-tenant">
+        <span class="name">TENANTS</span>
+        <span class="lede">Pay rent, see your lease and request maintenance.</span>
+        <span class="go">Tenant Login</span>
+      </a>
+    </div>
+  </section>
+<!--@end-->
 
   <!-- LOGIN / PORTAL (filled per company) -->
   <section class="view" id="view-company" aria-labelledby="login-title" hidden>
@@ -423,6 +445,7 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
     </div>
   </section>
 
+<!--@cadency-->
   <!-- ABOUT US -->
   <section class="view" id="view-about" aria-labelledby="about-title" hidden>
     <div class="page-head">
@@ -439,12 +462,18 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
     </aside>
   </section>
 
+<!--@end-->
 </main>
 
 <footer>
   <div class="wrap">
+<!--@cadency-->
     <span>Cadency</span>
     <span>Private Holding Company</span>
+<!--@end--><!--@mp-->
+    <span>MP Holdings</span>
+    <span>Cincinnati, Ohio</span>
+<!--@end-->
     <span>&copy; <span id="year">2026</span></span>
   </div>
 </footer>
@@ -460,11 +489,14 @@ const COMPANIES = {
   "mp-holdings": { name: "MP HOLDINGS", title: "MP Holdings", logo: '<span class="mp-mark" aria-hidden="true"></span>' }
 };
 // Each sign-in page: which company it belongs to and which encrypted entry it opens.
-const PORTALS = {
+const ALL_PORTALS = {
   "cadency":   { company: "cadency",     vault: "cadency",     heading: "Executive Login", label: "Executive Portal", perUser: true },
   "mp-owner":  { company: "mp-holdings", vault: "mp-holdings", heading: "Owner Login",     label: "Owner Portal", perUser: true },
   "mp-tenant": { company: "mp-holdings", vault: "mp-tenants",  heading: "Tenant Login",    label: "Tenant Portal", perUser: true }
 };
+const SITE_TITLE = "{{SITE_TITLE}}";
+// Only the sign-in pages this site offers.
+const PORTALS = Object.fromEntries({{SITE_PORTALS}}.map(id => [id, ALL_PORTALS[id]]));
 const ALIASES = { "mp-holdings": "mp-owner" };
 const VAULT = JSON.parse(document.getElementById("vault").textContent);
 const unlocked = {}; // decrypted portal HTML, kept in memory only
@@ -495,10 +527,10 @@ let current = "home";
 function show() {
   let hash = location.hash.slice(1);
   if (ALIASES[hash]) { location.replace("#" + ALIASES[hash]); return; }
-  current = hash === "about" || PORTALS[hash] ? hash : "home";
+  current = (hash === "about" && $("view-about")) || PORTALS[hash] ? hash : "home";
   const isPortal = !!PORTALS[current];
   $("view-home").hidden = current !== "home";
-  $("view-about").hidden = current !== "about";
+  if ($("view-about")) $("view-about").hidden = current !== "about";
   $("view-company").hidden = !isPortal;
   document.querySelectorAll("nav a").forEach(a => {
     const on = a.dataset.view === current || (isPortal && a.dataset.view === "home");
@@ -526,7 +558,7 @@ function show() {
     }
   } else {
     $("portal-content").innerHTML = "";
-    document.title = current === "about" ? "Cadency · About Us" : "Cadency";
+    document.title = current === "about" ? SITE_TITLE + " · About Us" : SITE_TITLE;
   }
   window.scrollTo(0, 0);
 }

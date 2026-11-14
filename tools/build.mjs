@@ -3,7 +3,8 @@
 // encrypts each portal with AES-256-GCM using a key derived from its username and password (PBKDF2-SHA256),
 // and embeds the logos as data URIs.
 // Usage: node tools/build.mjs
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { renderPortfolio, renderTenant } from "./render-portfolio.mjs";
 import { webcrypto as crypto, createHash } from "node:crypto";
 
@@ -51,10 +52,27 @@ if (Object.keys(tenants).length) {
   }
 }
 
-const out = read("src/site.html").toString()
+// The same template builds two sites. Each gets only its own sign-in pages and encrypted content.
+const SITES = [
+  { id: "cadency", out: "index.html", title: "Cadency", description: "Cadency is a private holding company.",
+    portals: ["cadency", "mp-owner"], vaults: ["cadency", "mp-holdings"] },
+  { id: "mp", out: process.env.MP_SITE_OUT || "dist/mpholdings/index.html", title: "MP Holdings",
+    description: "MP Holdings owns and manages residential properties in Cincinnati, Ohio.",
+    portals: ["mp-owner", "mp-tenant"], vaults: ["mp-holdings", "mp-tenants"] }
+];
+const template = read("src/site.html").toString()
   .replaceAll("{{CADENCY_CREST}}", dataUri("src/assets/cadency-crest.png"))
   .replaceAll("{{MP_INK}}", dataUri("src/assets/mp-mark-ink.png"))
-  .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"))
-  .replace("{{VAULT}}", JSON.stringify(vault));
-writeFileSync(root + "index.html", out);
-console.log("Built index.html with portals:", Object.keys(vault).join(", "), "| tenant units:", Object.keys(vault["mp-tenants"] || {}).length);
+  .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"));
+for (const site of SITES) {
+  // Keep this site's <!--@site--> blocks, drop the other sites' blocks.
+  const html = template
+    .replace(/<!--@(\w+)-->([\s\S]*?)<!--@end-->\n?/g, (_, id, body) => id === site.id ? body : "")
+    .replaceAll("{{SITE_TITLE}}", site.title)
+    .replaceAll("{{SITE_DESCRIPTION}}", site.description)
+    .replace("{{SITE_PORTALS}}", JSON.stringify(site.portals))
+    .replace("{{VAULT}}", JSON.stringify(Object.fromEntries(site.vaults.filter(v => vault[v]).map(v => [v, vault[v]]))));
+  mkdirSync(dirname(root + site.out), { recursive: true });
+  writeFileSync(root + site.out, html);
+  console.log(`Built ${site.out}: ${site.portals.join(", ")}`);
+}

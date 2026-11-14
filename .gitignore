@@ -1,3 +1,6 @@
 # Plain-text portal content and logins. Never commit these: the repository is public.
 secrets.json
 portals/
+
+# Built MP Holdings site; published from its own repository.
+dist/
