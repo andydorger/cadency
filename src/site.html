@@ -347,16 +347,16 @@ form .button { width: 100%; }
 
 /* MP Holdings details: suit pinstripes, the logo's house divider, deco corners */
 .site-mp .masthead, .site-mp .landing-head, .site-mp footer {
-  background-image: repeating-linear-gradient(90deg, rgba(243, 238, 226, .045) 0 1px, transparent 1px 15px);
+  background-image: repeating-linear-gradient(90deg, rgba(243, 238, 226, .018) 0 1px, transparent 1px 22px);
 }
 .site-mp .landing-head { background-color: var(--band-2); background-image:
-  repeating-linear-gradient(90deg, rgba(243, 238, 226, .045) 0 1px, transparent 1px 15px),
+  repeating-linear-gradient(90deg, rgba(243, 238, 226, .018) 0 1px, transparent 1px 22px),
   radial-gradient(ellipse at 50% 120%, rgba(196, 154, 82, .18), transparent 60%),
   linear-gradient(180deg, var(--band-2), var(--band)); }
 .site-mp .mp-rule { display: flex; align-items: center; justify-content: center; gap: .9rem; color: var(--gold-btn); margin-top: .6rem; }
 .site-mp .mp-rule span { height: 2px; width: min(9rem, 28vw); background: var(--gold-btn); border-radius: 2px; transform-origin: right; animation: rule-in 1.1s .2s cubic-bezier(.2,.7,.2,1) both; }
 .site-mp .mp-rule span:last-child { transform-origin: left; }
-.site-mp .mp-rule svg { flex: none; animation: house-in .7s .9s ease-out both; }
+.site-mp .mp-rule .mp-house { flex: none; width: 2.1rem; aspect-ratio: 201 / 192; background: var(--gold-btn); -webkit-mask: url("{{MP_HOUSE}}") center / contain no-repeat; mask: url("{{MP_HOUSE}}") center / contain no-repeat; animation: house-in .7s .9s ease-out both; }
 @keyframes rule-in { from { transform: scaleX(.15); } to { transform: scaleX(1); } }
 @keyframes house-in { from { transform: translateY(4px); opacity: .4; } to { transform: none; opacity: 1; } }
 .site-mp .entrance { position: relative; transition: transform .3s ease, box-shadow .3s ease, background .25s; }
@@ -370,7 +370,7 @@ form .button { width: 100%; }
 .site-mp .entrance.plain { grid-template-rows: auto auto auto auto; gap: .9rem; padding-block: 2.75rem 2.5rem; }
 .site-mp .entrance .icon { color: var(--gold-btn); display: grid; place-items: center; width: 4.25rem; height: 4.25rem; border-radius: 50%; background: var(--band); }
 .site-mp .entrance .icon svg { width: 2.3rem; height: 2.3rem; }
-@media (prefers-reduced-motion: reduce) { .site-mp .mp-rule span, .site-mp .mp-rule svg { animation: none; } .site-mp .entrance:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .site-mp .mp-rule span, .site-mp .mp-rule .mp-house { animation: none; } .site-mp .entrance:hover { transform: none; } }
 
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
@@ -464,7 +464,7 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
     <div class="landing-head">
       <p class="eyebrow" id="home-title">Welcome</p>
       <p class="motto">Residential properties in Cincinnati, Ohio.</p>
-      <div class="mp-rule" aria-hidden="true"><span></span><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="currentColor"/><path d="M15.5 5.5h2v3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="10" y="13" width="4" height="4" fill="var(--band)"/><path d="M12 13v4M10 15h4" stroke="currentColor" stroke-width=".8"/></svg><span></span></div>
+      <div class="mp-rule" aria-hidden="true"><span></span><i class="mp-house"></i><span></span></div>
     </div>
     <div class="entrances">
       <a class="entrance plain" href="#mp-owner">

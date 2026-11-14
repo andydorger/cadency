@@ -63,7 +63,8 @@ const SITES = [
 const template = read("src/site.html").toString()
   .replaceAll("{{CADENCY_CREST}}", dataUri("src/assets/cadency-crest.png"))
   .replaceAll("{{MP_INK}}", dataUri("src/assets/mp-mark-ink.png"))
-  .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"));
+  .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"))
+  .replaceAll("{{MP_HOUSE}}", dataUri("src/assets/mp-house.png"));
 for (const site of SITES) {
   // Keep this site's <!--@site--> blocks, drop the other sites' blocks.
   const html = template
