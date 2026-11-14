@@ -64,7 +64,8 @@ function calc(p) {
     rent, income, debt, mortgageDebt, helocPayment, expenses, cashFlow, balance, mortgageBalance, helocBalance, equity, balanceEstimated: !!(lb && lb.estimated),
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
     cashOnCash: has(cashFlow) && has(invested) && invested > 0 ? (cashFlow * 12 / invested) * 100 : null,
-    ltv: has(balance) && has(p.estimatedValue) && p.estimatedValue ? (balance / p.estimatedValue) * 100 : null,
+    // Loan to value uses the same basis as equity: the market estimate when there is one.
+    ltv: has(balance) && has(equityBase) && equityBase ? (balance / equityBase) * 100 : null,
     appreciation: all(p.estimatedValue, p.purchasePrice) ? p.estimatedValue - p.purchasePrice : null,
     appreciationPct: all(p.estimatedValue, p.purchasePrice) ? ((p.estimatedValue - p.purchasePrice) / p.purchasePrice) * 100 : null
   };
@@ -114,7 +115,7 @@ function property(p) {
     l.mi ? ["Mortgage insurance", usd(l.mi) + (l.miNote ? ` <span class="sub">(${esc(l.miNote)})</span>` : "")] : null,
     l.escrow ? ["Escrow (taxes and insurance)", usd(l.escrow)] : null,
     (l.mi || l.escrow) && has(c.mortgageDebt) ? ["Total monthly payment", usd(c.mortgageDebt)] : null,
-    ["Loan to value" + (p.heloc ? " (incl. HELOC)" : ""), pct(c.ltv)]
+    ["Loan to value" + (p.heloc ? " (incl. HELOC)" : "") + (p.market ? "*" : ""), pct(c.ltv)]
   ]);
   const h = p.heloc;
   if (h) financing += `
@@ -173,7 +174,7 @@ function property(p) {
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
       ])}
-      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(p.market.source)} market estimate of ${usd(p.market.value)} (${monthYear(p.market.date)}) minus ${p.heloc ? `the mortgage balance of ${usd(c.mortgageBalance)} and HELOC balance of ${usd(c.helocBalance)}` : `the loan balance of ${usd(c.balance)}`}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""}</p>` : ""}
+      ${p.market && has(c.balance) ? `<p class="footnote">* ${esc(p.market.source)} market estimate of ${usd(p.market.value)} (${monthYear(p.market.date)}) minus ${p.heloc ? `the mortgage balance of ${usd(c.mortgageBalance)} and HELOC balance of ${usd(c.helocBalance)}` : `the loan balance of ${usd(c.balance)}`}.${has(p.purchasePrice) ? ` Based on the purchase price of ${usd(p.purchasePrice)}, equity would be ${usd(p.purchasePrice - c.balance)}.` : ""} Loan to value uses the same market estimate${has(p.purchasePrice) ? ` (${pct(c.balance / p.purchasePrice * 100)} at the purchase price)` : ""}.</p>` : ""}
     </section>
     <section class="panel">
       <h4>Financing</h4>
@@ -213,10 +214,10 @@ export function renderPortfolio(data, title) {
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
   const purchaseTotal = T(x => x.p.purchasePrice);
   const marketTotal = total(ps.map(({ p }) => p.market && has(p.market.value) ? p.market.value : p.estimatedValue));
-  const equityNote = anyMarket ? `<p class="footnote">* Equity is the latest market estimates (${esc(marketDates.join("; "))}) of ${usd(marketTotal)} minus loan balances of ${usd(balance)}.${has(purchaseTotal) && has(balance) ? ` Based on purchase prices of ${usd(purchaseTotal)}, equity would be ${usd(purchaseTotal - balance)}.` : ""}</p>` : "";
+  const ltv = has(balance) && has(marketTotal) && marketTotal ? balance / marketTotal * 100 : null;
+  const equityNote = anyMarket ? `<p class="footnote">* Equity is the latest market estimates (${esc(marketDates.join("; "))}) of ${usd(marketTotal)} minus loan balances of ${usd(balance)}. Loan to value (LTV) is loan balances divided by those estimates.${has(purchaseTotal) && has(balance) ? ` Based on purchase prices of ${usd(purchaseTotal)}, equity would be ${usd(purchaseTotal - balance)}.` : ""}</p>` : "";
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const market = T(x => x.p.market ? x.p.market.value : null);
-  const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
   return `
@@ -243,7 +244,7 @@ export function renderPortfolio(data, title) {
     <h3>Monthly cash flow by property</h3>
     <div class="scroll">
       <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV</th></tr></thead>
+        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV${anyMarket ? "*" : ""}</th></tr></thead>
         <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(p.market && p.market.value)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(market)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
