@@ -305,6 +305,45 @@ form .button { width: 100%; }
 .contacts a { color: var(--ink-soft); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; overflow-wrap: anywhere; }
 .contacts a:hover { text-decoration-color: var(--brass); }
 
+/* ---------- MP Holdings colour: the logo's navy and gold ---------- */
+.site-mp {
+  --band: #14294a; --band-2: #0e1f3a; --band-ink: #f3eee2; --band-muted: #aeb6c4;
+  --gold-btn: #c49a52; --cream: #f2ecdf;
+}
+.site-mp body, body.site-mp { background: var(--paper); }
+.site-mp .masthead { background: var(--band); border-bottom: 3px solid var(--gold-btn); }
+.site-mp .masthead .wrap { padding-block: 1.75rem 1.5rem; }
+.site-mp .brand, .site-mp .wordmark { color: var(--band-ink); }
+.site-mp .masthead .mp-mark::before { background: var(--band-ink); }
+.site-mp .masthead .mp-mark::after { background: var(--gold-btn); }
+.site-mp main { padding-block-start: 0; }
+.site-mp .landing-head {
+  margin-inline: calc(50% - 50vw); padding: 3rem max(16px, env(safe-area-inset-left, 0px)) 3.25rem;
+  background: linear-gradient(180deg, var(--band-2), var(--band)); margin-bottom: 3.5rem;
+}
+.site-mp .landing-head .eyebrow { color: var(--gold-btn); }
+.site-mp .landing-head .motto { color: var(--band-ink); font-size: clamp(1.4rem, 3vw, 1.9rem); max-width: 40rem; }
+.site-mp .entrance { background: var(--cream); border-color: transparent; outline-color: var(--gold-btn); border-top: 3px solid var(--gold-btn); }
+.site-mp .entrance:hover { background: var(--cream); border-color: transparent; border-top-color: var(--band); outline-color: var(--band); }
+.site-mp .entrance .name { color: var(--band); }
+.site-mp .entrance .lede { color: #4a5568; }
+.site-mp .go, .site-mp .button { background: var(--band); color: var(--band-ink); border-color: var(--band); }
+.site-mp .entrance:hover .go, .site-mp .go:hover, .site-mp .button:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-2); }
+.site-mp #view-company { padding-top: 3.5rem; }
+.site-mp form { border-top: 3px solid var(--gold-btn); }
+.site-mp .pay-card { background: var(--band); border-top: 3px solid var(--gold-btn); }
+.site-mp .pay-card h3, .site-mp .pay-card .due strong { color: var(--band-ink); }
+.site-mp .pay-card .due, .site-mp .pay-card .handle, .site-mp .pay-card .facts dt, .site-mp .pay-card .facts dd { color: var(--band-ink); }
+.site-mp .pay-card .note { color: var(--band-muted); }
+.site-mp .pay-card .facts div { border-bottom-color: rgba(243, 238, 226, .2); }
+.site-mp .pay-card .venmo { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-2); }
+.site-mp .pay-card .venmo:hover { background: var(--band-ink); border-color: var(--band-ink); }
+.site-mp .tiles .key { background: var(--band); }
+.site-mp .tiles .key > span { color: var(--gold-btn); }
+.site-mp .tiles .key strong, .site-mp .tiles .key small, .site-mp .tiles .key .neg { color: var(--band-ink); }
+.site-mp footer { background: var(--band); border-top: 3px solid var(--gold-btn); }
+.site-mp footer .wrap { color: var(--band-muted); }
+
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
 .heraldry p { color: var(--ink-soft); font-size: 1.05rem; }
@@ -344,7 +383,7 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
 }
 </style>
 </head>
-<body>
+<body class="site-{{SITE_ID}}">
 
 <header class="masthead">
   <div class="wrap">

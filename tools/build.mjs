@@ -69,6 +69,7 @@ for (const site of SITES) {
   const html = template
     .replace(/<!--@(\w+)-->([\s\S]*?)<!--@end-->\n?/g, (_, id, body) => id === site.id ? body : "")
     .replaceAll("{{SITE_TITLE}}", site.title)
+    .replaceAll("{{SITE_ID}}", site.id)
     .replaceAll("{{SITE_DESCRIPTION}}", site.description)
     .replace("{{SITE_PORTALS}}", JSON.stringify(site.portals))
     .replace("{{VAULT}}", JSON.stringify(Object.fromEntries(site.vaults.filter(v => vault[v]).map(v => [v, vault[v]]))));
