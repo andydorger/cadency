@@ -51,7 +51,9 @@ function calc(p) {
   const balance = noLoan ? 0 : (lb ? lb.value : null);
   const original = noLoan ? 0 : (loan && has(loan.original) ? loan.original : null);
   const invested = all(p.purchasePrice, original) ? p.purchasePrice - original + (p.closingCosts || 0) : null;
-  const equity = all(p.estimatedValue, balance) ? p.estimatedValue - balance : null;
+  // Equity uses the latest market estimate (e.g. RentCast) when there is one, otherwise the recorded value.
+  const equityBase = p.market && has(p.market.value) ? p.market.value : p.estimatedValue;
+  const equity = all(equityBase, balance) ? equityBase - balance : null;
   return {
     rent, income, debt, expenses, cashFlow, balance, equity, balanceEstimated: !!(lb && lb.estimated),
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
@@ -151,9 +153,9 @@ function property(p) {
         p.market && has(p.purchasePrice) ? ["Market estimate vs. purchase", `${signed(p.market.value - p.purchasePrice)} <span class="sub">(${pct((p.market.value - p.purchasePrice) / p.purchasePrice * 100)})</span>`] : null,
         p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
-        ["Equity", usd(c.equity)],
-        p.market && has(c.balance) ? [`Estimated equity (${esc(p.market.source)})`, `${usd(p.market.value - c.balance)} <span class="sub">(${pct((c.balance / p.market.value) * 100, 0)} loan to value)</span>`] : null
+        ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
       ])}
+      ${p.market ? `<p class="footnote">* Based on the ${esc(p.market.source)} market estimate (${monthYear(p.market.date)}) minus the estimated loan balance.</p>` : ""}
     </section>
     <section class="panel">
       <h4>Financing</h4>
@@ -188,10 +190,12 @@ function property(p) {
 export function renderPortfolio(data, title) {
   const ps = data.properties.map(p => ({ p, c: calc(p) }));
   const T = f => total(ps.map(f));
+  const anyMarket = ps.some(({ p }) => p.market);
+  const marketDates = [...new Set(ps.filter(({ p }) => p.market).map(({ p }) => `${p.market.source}, ${monthYear(p.market.date)}`))];
+  const equityNote = anyMarket ? `<p class="footnote">* Equity is the latest market estimate (${esc(marketDates.join("; "))}) minus the estimated loan balance.</p>` : "";
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const market = T(x => x.p.market ? x.p.market.value : null);
-  const marketEquity = has(market) && has(balance) ? market - balance : null;
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
@@ -209,15 +213,17 @@ export function renderPortfolio(data, title) {
     <div><span>Properties</span><strong>${ps.length}</strong></div>
     <div><span>Estimated value</span><strong>${usd(value)}</strong></div>
     <div><span>Loan balances</span><strong>${usd(balance)}</strong></div>
-    <div><span>Equity</span><strong>${usd(equity)}</strong>${has(marketEquity) ? `<em>${usd(marketEquity)} at market estimate</em>` : ""}</div>
+    <div><span>Equity${anyMarket ? "*" : ""}</span><strong>${usd(equity)}</strong></div>
     <div class="key"><span>Cash flow after debt</span><strong>${signed(flow)}${has(flow) ? "<small> / mo</small>" : ""}</strong></div>
   </div>
+
+  ${equityNote}
 
   <section class="block">
     <h3>Monthly cash flow by property</h3>
     <div class="scroll">
       <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
+        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV</th></tr></thead>
         <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(p.market && p.market.value)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(market)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
