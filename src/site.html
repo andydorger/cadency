@@ -459,8 +459,8 @@ const COMPANIES = {
 };
 // Each sign-in page: which company it belongs to and which encrypted entry it opens.
 const PORTALS = {
-  "cadency":   { company: "cadency",     vault: "cadency",     heading: "Executive Login", label: "Executive Portal" },
-  "mp-owner":  { company: "mp-holdings", vault: "mp-holdings", heading: "Owner Login",     label: "Owner Portal" },
+  "cadency":   { company: "cadency",     vault: "cadency",     heading: "Executive Login", label: "Executive Portal", perUser: true },
+  "mp-owner":  { company: "mp-holdings", vault: "mp-holdings", heading: "Owner Login",     label: "Owner Portal", perUser: true },
   "mp-tenant": { company: "mp-holdings", vault: "mp-tenants",  heading: "Tenant Login",    label: "Tenant Portal", perUser: true }
 };
 const ALIASES = { "mp-holdings": "mp-owner" };
@@ -476,7 +476,7 @@ async function decryptPortal(id, username, password) {
   const user = username.trim().toLowerCase();
   let v = VAULT[portal.vault];
   if (portal.perUser) {
-    const k = hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mp-tenant\n" + user)));
+    const k = hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(portal.vault + "\n" + user)));
     v = v && v[k];
     if (!v) throw new Error("unknown user");
   }

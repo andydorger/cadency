@@ -27,25 +27,27 @@ async function encrypt(html, username, password) {
 
 const logins = JSON.parse(read("secrets.json"));
 const vault = {};
+// Every portal keeps one encrypted copy per user, filed under a hash of the username
+// so the page knows which copy to try without listing usernames in the clear.
+const userKey = (vaultId, u) => createHash("sha256").update(vaultId + "\n" + u.trim().toLowerCase()).digest("hex");
 const { tenants = {}, ...portalLogins } = logins;
-for (const [id, { username, password }] of Object.entries(portalLogins)) {
+for (const [id, { title, users }] of Object.entries(portalLogins)) {
   // A portal with a data file (portals/<id>.json) is rendered from it; otherwise portals/<id>.html is used as is.
   const html = existsSync(root + `portals/${id}.json`)
-    ? renderPortfolio(JSON.parse(read(`portals/${id}.json`)), logins[id].title || id)
+    ? renderPortfolio(JSON.parse(read(`portals/${id}.json`)), title || id)
     : read(`portals/${id}.html`).toString();
-  vault[id] = await encrypt(html, username, password);
+  vault[id] = {};
+  for (const [username, password] of Object.entries(users)) vault[id][userKey(id, username)] = await encrypt(html, username, password);
 }
 
-// Tenant portals: one encrypted page per unit, filed under a hash of the username so the
-// page knows which entry to try without listing usernames in the clear.
-const userKey = u => createHash("sha256").update("mp-tenant\n" + u.trim().toLowerCase()).digest("hex");
+// Tenant portals: one encrypted page per unit, shown only to that unit's login.
 if (Object.keys(tenants).length) {
   const data = JSON.parse(read("portals/mp-holdings.json"));
   vault["mp-tenants"] = {};
   for (const p of data.properties) for (const u of p.units || []) {
     const login = tenants[u.unit];
     if (!login) continue;
-    vault["mp-tenants"][userKey(login.username)] = await encrypt(renderTenant(data, p, u), login.username, login.password);
+    vault["mp-tenants"][userKey("mp-tenants", login.username)] = await encrypt(renderTenant(data, p, u), login.username, login.password);
   }
 }
 
