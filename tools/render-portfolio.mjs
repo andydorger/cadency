@@ -151,7 +151,8 @@ function property(p) {
         p.market && has(p.purchasePrice) ? ["Market estimate vs. purchase", `${signed(p.market.value - p.purchasePrice)} <span class="sub">(${pct((p.market.value - p.purchasePrice) / p.purchasePrice * 100)})</span>`] : null,
         p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
-        ["Equity", usd(c.equity)]
+        ["Equity", usd(c.equity)],
+        p.market && has(c.balance) ? [`Estimated equity (${esc(p.market.source)})`, `${usd(p.market.value - c.balance)} <span class="sub">(${pct((c.balance / p.market.value) * 100, 0)} loan to value)</span>`] : null
       ])}
     </section>
     <section class="panel">
@@ -190,6 +191,7 @@ export function renderPortfolio(data, title) {
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const market = T(x => x.p.market ? x.p.market.value : null);
+  const marketEquity = has(market) && has(balance) ? market - balance : null;
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
@@ -207,7 +209,7 @@ export function renderPortfolio(data, title) {
     <div><span>Properties</span><strong>${ps.length}</strong></div>
     <div><span>Estimated value</span><strong>${usd(value)}</strong></div>
     <div><span>Loan balances</span><strong>${usd(balance)}</strong></div>
-    <div><span>Equity</span><strong>${usd(equity)}</strong></div>
+    <div><span>Equity</span><strong>${usd(equity)}</strong>${has(marketEquity) ? `<em>${usd(marketEquity)} at market estimate</em>` : ""}</div>
     <div class="key"><span>Cash flow after debt</span><strong>${signed(flow)}${has(flow) ? "<small> / mo</small>" : ""}</strong></div>
   </div>
 
