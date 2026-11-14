@@ -16,19 +16,40 @@ const monthLabel = ym => new Date(ym + "-15T12:00:00Z").toLocaleDateString("en-U
 const STATUS = { paid: "Paid", late: "Paid late", due: "Due", unpaid: "Unpaid" };
 const total = xs => xs.every(has) && xs.length ? xs.reduce((a, b) => a + b, 0) : null;
 
+// Months of payments made from the first payment through the current month, inclusive.
+function paymentsMade(firstPayment, now = new Date()) {
+  const [y, m] = firstPayment.split("-").map(Number);
+  return Math.max(0, (now.getUTCFullYear() - y) * 12 + (now.getUTCMonth() + 1 - m) + 1);
+}
+// Remaining principal on a fixed-rate loan after n scheduled payments.
+function amortizedBalance(original, ratePct, termYears, n) {
+  const r = ratePct / 100 / 12, N = termYears * 12;
+  if (n >= N) return 0;
+  return original * (Math.pow(1 + r, N) - Math.pow(1 + r, n)) / (Math.pow(1 + r, N) - 1);
+}
+export function loanBalance(loan) {
+  if (!loan) return null;
+  if (has(loan.balance)) return { value: loan.balance, estimated: false };
+  if (all(loan.original, loan.rate, loan.termYears) && loan.firstPayment)
+    return { value: amortizedBalance(loan.original, loan.rate, loan.termYears, paymentsMade(loan.firstPayment)), estimated: true };
+  return null;
+}
+
 function calc(p) {
   const loan = p.loan;
   const noLoan = loan === false;
-  const debt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.escrow || 0) : null);
+  const rent = p.units ? total(p.units.map(u => u.rent)) : (has(p.rent) ? p.rent : null);
+  const debt = noLoan ? 0 : (loan && has(loan.payment) ? loan.payment + (loan.mi || 0) + (loan.escrow || 0) : null);
   const expList = Object.values(p.expenses || {});
   const expenses = p.expenses && expList.length && expList.every(v => v === 0 || has(v)) ? expList.reduce((a, b) => a + b, 0) : null;
-  const cashFlow = all(p.rent, debt, expenses) ? p.rent - debt - expenses : null;
-  const balance = noLoan ? 0 : (loan && has(loan.balance) ? loan.balance : null);
+  const cashFlow = all(rent, debt, expenses) ? rent - debt - expenses : null;
+  const lb = loanBalance(loan);
+  const balance = noLoan ? 0 : (lb ? lb.value : null);
   const original = noLoan ? 0 : (loan && has(loan.original) ? loan.original : null);
   const invested = all(p.purchasePrice, original) ? p.purchasePrice - original + (p.closingCosts || 0) : null;
   const equity = all(p.estimatedValue, balance) ? p.estimatedValue - balance : null;
   return {
-    debt, expenses, cashFlow, balance, equity,
+    rent, debt, expenses, cashFlow, balance, equity, balanceEstimated: !!(lb && lb.estimated),
     annualCashFlow: has(cashFlow) ? cashFlow * 12 : null,
     cashOnCash: has(cashFlow) && has(invested) && invested > 0 ? (cashFlow * 12 / invested) * 100 : null,
     ltv: has(balance) && has(p.estimatedValue) && p.estimatedValue ? (balance / p.estimatedValue) * 100 : null,
@@ -40,11 +61,29 @@ function calc(p) {
 const dl = rows => `<dl class="facts">${rows.filter(Boolean).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
 const awaiting = what => `<p class="empty">${what} not yet provided.</p>`;
 
+function tenantFacts(t, rent, unit) {
+  if (t === false) return dl([unit ? ["Unit", esc(unit)] : null, ["Tenant", "Vacant"]]);
+  if (!t) return unit ? dl([["Unit", esc(unit)], ["Tenant", NA]]) : awaiting("Tenant details");
+  return dl([
+    unit ? ["Unit", `<strong>${esc(unit)}</strong>${t.unitNote ? ` <span class="sub">(${esc(t.unitNote)})</span>` : ""}`] : null,
+    ["Tenant", esc(t.name)],
+    ["Lease", t.leaseStart ? `${date(t.leaseStart)} to ${t.leaseEnd ? date(t.leaseEnd) : NA}` : NA],
+    t.note ? ["Status", esc(t.note)] : null,
+    ["Monthly rent", usd(rent)],
+    ["Security deposit", usd(t.deposit)]
+  ]);
+}
+
+function months(payments) {
+  const pay = Object.entries(payments || {}).sort(([a], [b]) => a.localeCompare(b));
+  if (!pay.length) return awaiting("Rent payment history");
+  return `<ol class="months">${pay.map(([m, s]) => `<li><span class="m">${monthLabel(m)}</span><span class="chip ${esc(s)}">${STATUS[s] || esc(s)}</span></li>`).join("")}</ol>`;
+}
+
 function property(p) {
   const c = calc(p);
   const l = p.loan;
   const maturityYear = l && l.start && has(l.termYears) ? Number(l.start.slice(0, 4)) + l.termYears : null;
-  const pay = Object.entries(p.payments || {}).sort(([a], [b]) => a.localeCompare(b));
   const maint = [...(p.maintenance || [])].sort((a, b) => b.date.localeCompare(a.date));
   const maintTotal = total(maint.map(m => m.cost));
   const subtitle = [p.address, p.type].filter(Boolean).map(esc).join(" · ");
@@ -55,18 +94,30 @@ function property(p) {
   else financing = dl([
     ["Lender", l.lender ? esc(l.lender) : NA],
     ["Original loan", usd(l.original)],
-    ["Current balance", usd(l.balance)],
-    ["Interest rate", has(l.rate) ? pct(l.rate, 2) + (l.rateType ? " " + esc(l.rateType) : "") : NA],
+    l.loanType ? ["Loan type", esc(l.loanType)] : null,
+    ["Current balance", has(c.balance) ? usd(c.balance) + (c.balanceEstimated ? ` <span class="sub">(est.)</span>` : "") : NA],
+    ["Interest rate", has(l.rate) ? pct(l.rate, 3).replace(/0%$/, "%") + (l.rateType ? " " + esc(l.rateType) : "") : NA],
     ["Term", has(l.termYears) ? `${l.termYears} years${maturityYear ? `, matures ${maturityYear}` : ""}` : NA],
-    ["Monthly payment", has(l.payment) ? usd(l.payment) + (l.escrow ? ` + ${usd(l.escrow)} escrow` : "") : NA],
+    ["Principal and interest", usd(l.payment)],
+    l.mi ? ["Mortgage insurance", usd(l.mi) + (l.miNote ? ` <span class="sub">(${esc(l.miNote)})</span>` : "")] : null,
+    l.escrow ? ["Escrow (taxes and insurance)", usd(l.escrow)] : null,
+    (l.mi || l.escrow) && has(c.debt) ? ["Total monthly payment", usd(c.debt)] : null,
     ["Loan to value", pct(c.ltv)]
   ]);
 
   const expRows = Object.entries(p.expenses || {}).filter(([, v]) => v !== 0);
-  const cashflow = (has(p.rent) || expRows.length || has(c.debt)) ? `
+  const rentRows = p.units
+    ? p.units.map(u => `<div><dt>Rent, ${esc(u.unit)}</dt><dd>${usd(u.rent)}</dd></div>`).join("")
+    : `<div><dt>Rent</dt><dd>${usd(c.rent)}</dd></div>`;
+  const debtRows = l && (l.mi || l.escrow)
+    ? `<div><dt>Mortgage principal and interest</dt><dd>${neg(l.payment)}</dd></div>`
+      + (l.mi ? `<div><dt>Mortgage insurance</dt><dd>${neg(l.mi)}</dd></div>` : "")
+      + (l.escrow ? `<div><dt>Escrow (taxes and insurance)</dt><dd>${neg(l.escrow)}</dd></div>` : "")
+    : `<div><dt>Mortgage</dt><dd>${neg(c.debt)}</dd></div>`;
+  const cashflow = (has(c.rent) || p.units || expRows.length || has(c.debt)) ? `
       <dl class="facts ledger">
-        <div><dt>Rent</dt><dd>${usd(p.rent)}</dd></div>
-        <div><dt>Mortgage${l && l.escrow ? " and escrow" : ""}</dt><dd>${neg(c.debt)}</dd></div>
+        ${rentRows}
+        ${debtRows}
         ${expRows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${neg(v)}</dd></div>`).join("")}
         ${expRows.length ? "" : `<div><dt>Operating expenses</dt><dd>${NA}</dd></div>`}
         <div class="total"><dt>Cash flow after debt</dt><dd>${signed(c.cashFlow)}</dd></div>
@@ -87,7 +138,7 @@ function property(p) {
         ["Purchase price", usd(p.purchasePrice)],
         ["Purchased", date(p.purchaseDate)],
         ["Closing costs", usd(p.closingCosts)],
-        ["Estimated value", usd(p.estimatedValue)],
+        ["Estimated value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity", usd(c.equity)]
       ])}
@@ -101,20 +152,14 @@ function property(p) {
       ${cashflow}
     </section>
     <section class="panel">
-      <h4>Tenant and lease</h4>
-      ${p.vacant ? `<p class="empty">Vacant.</p>` : p.tenant ? dl([
-        ["Tenant", esc(p.tenant.name)],
-        ["Lease", p.tenant.leaseStart ? `${date(p.tenant.leaseStart)} to ${date(p.tenant.leaseEnd)}` : NA],
-        p.tenant.note ? ["Status", esc(p.tenant.note)] : null,
-        ["Monthly rent", usd(p.rent)],
-        ["Security deposit", usd(p.tenant.deposit)]
-      ]) : awaiting("Tenant details")}
+      <h4>${p.units ? "Tenants and leases" : "Tenant and lease"}</h4>
+      ${p.units ? p.units.map(u => tenantFacts(u.tenant, u.rent, u.unit)).join("") : p.vacant ? `<p class="empty">Vacant.</p>` : tenantFacts(p.tenant, p.rent)}
     </section>
     <section class="panel wide">
       <h4>Rent payments</h4>
-      ${pay.length ? `<ol class="months">
-        ${pay.map(([m, s]) => `<li><span class="m">${monthLabel(m)}</span><span class="chip ${esc(s)}">${STATUS[s] || esc(s)}</span></li>`).join("")}
-      </ol>` : awaiting("Rent payment history")}
+      ${p.units
+        ? p.units.map(u => `<div class="unit-pay"><p class="unit-label">${esc(u.unit)}</p>${months(u.payments)}</div>`).join("")
+        : months(p.payments)}
     </section>
     <section class="panel wide">
       <h4>Maintenance history</h4>
@@ -132,7 +177,7 @@ export function renderPortfolio(data, title) {
   const ps = data.properties.map(p => ({ p, c: calc(p) }));
   const T = f => total(ps.map(f));
   const value = T(x => x.p.estimatedValue), balance = T(x => x.c.balance), equity = T(x => x.c.equity), flow = T(x => x.c.cashFlow);
-  const rent = T(x => x.p.rent), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
+  const rent = T(x => x.c.rent), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const ltv = has(balance) && has(value) && value ? balance / value * 100 : null;
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
@@ -159,7 +204,7 @@ export function renderPortfolio(data, title) {
     <div class="scroll">
       <table class="ledger-table">
         <thead><tr><th>Property</th><th class="num">Rent</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Equity</th><th class="num">LTV</th></tr></thead>
-        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(p.rent)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
+        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.rent)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
     </div>

@@ -275,6 +275,9 @@ form .button { width: 100%; }
 .months { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
 .months li { display: grid; gap: .35rem; justify-items: center; text-align: center; padding: .7rem .25rem; border: 1px solid var(--rule); }
 .months .m { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.unit-pay { display: grid; gap: .45rem; }
+.unit-pay + .unit-pay { margin-top: .6rem; }
+.unit-label { font-family: var(--display); font-weight: 600; font-size: 1.05rem; color: var(--ink); }
 .chip { font-size: .85rem; padding: .1rem .55rem; border-radius: 999px; white-space: nowrap; }
 .chip.paid { color: var(--ok); background: var(--ok-bg); }
 .chip.late { color: var(--warn); background: var(--warn-bg); }
