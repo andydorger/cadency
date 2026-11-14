@@ -39,9 +39,16 @@ export function loanBalance(loan) {
 // Which RentCast figure to use for equity and loan to value: "low" (low end of the range) or the midpoint estimate.
 // Set per portfolio with "marketBasis" in the data file.
 let MARKET_BASIS = "estimate";
-const mv = p => !p.market ? null : (MARKET_BASIS === "low" && has(p.market.low) ? p.market.low : p.market.value);
-const mvLabel = p => MARKET_BASIS === "low" && p.market && has(p.market.low)
-  ? `low end of the ${p.market.source} estimate range` : `${p.market.source} market estimate`;
+// A property can set "valueFloor": the owners' minimum value, used whenever the estimate falls below it.
+const basisOf = p => p.marketBasis || MARKET_BASIS;
+const usesLow = p => basisOf(p) === "low" && p.market && has(p.market.low);
+const rawMv = p => !p.market ? null : (usesLow(p) ? p.market.low : p.market.value);
+const floorApplies = p => has(p.valueFloor) && has(rawMv(p)) && rawMv(p) < p.valueFloor;
+const mv = p => floorApplies(p) ? p.valueFloor : rawMv(p);
+const rawLabel = p => usesLow(p)
+  ? `low end of the ${p.market.source} estimate range` : `midpoint of the ${p.market.source} estimate range`;
+const mvLabel = p => floorApplies(p)
+  ? `owners' minimum value (the ${rawLabel(p)} is ${usd(rawMv(p))})` : rawLabel(p);
 
 function calc(p) {
   const loan = p.loan;
@@ -174,9 +181,9 @@ function property(p) {
         ["Purchased", date(p.purchaseDate)],
         ["Closing costs", usd(p.closingCosts)],
         ["Estimated value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
-        p.market ? [`Market estimate (${esc(p.market.source)}, ${monthYear(p.market.date)})`,
-          `${usd(mv(p))}${has(p.market.low) ? ` <span class="sub">(${MARKET_BASIS === "low" ? `low end of range ${usd(p.market.low)} – ${usd(p.market.high)}; midpoint ${usd(p.market.value)}` : `range ${usd(p.market.low)} – ${usd(p.market.high)}`})</span>` : ""}`] : null,
-        p.market && has(p.purchasePrice) ? ["Market estimate vs. purchase", `${signed(mv(p) - p.purchasePrice)} <span class="sub">(${pct((mv(p) - p.purchasePrice) / p.purchasePrice * 100)})</span>`] : null,
+        p.market ? [floorApplies(p) ? `Value used (${esc(p.market.source)} checked ${monthYear(p.market.date)})` : `Market estimate (${esc(p.market.source)}, ${monthYear(p.market.date)})`,
+          `${usd(mv(p))}${floorApplies(p) ? ` <span class="sub">(owners' minimum; RentCast range ${usd(p.market.low)} – ${usd(p.market.high)})</span>` : has(p.market.low) ? ` <span class="sub">(${usesLow(p) ? `low end of range ${usd(p.market.low)} – ${usd(p.market.high)}; midpoint ${usd(p.market.value)}` : `midpoint of range ${usd(p.market.low)} – ${usd(p.market.high)}`})</span>` : ""}`] : null,
+        p.market && has(p.purchasePrice) ? [floorApplies(p) ? "Value used vs. purchase" : "Market estimate vs. purchase", `${signed(mv(p) - p.purchasePrice)} <span class="sub">(${pct((mv(p) - p.purchasePrice) / p.purchasePrice * 100)})</span>`] : null,
         p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
         ["Appreciation", has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
         ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
@@ -223,7 +230,7 @@ export function renderPortfolio(data, title) {
   const purchaseTotal = T(x => x.p.purchasePrice);
   const marketTotal = total(ps.map(({ p }) => has(mv(p)) ? mv(p) : p.estimatedValue));
   const ltv = has(balance) && has(marketTotal) && marketTotal ? balance / marketTotal * 100 : null;
-  const equityNote = anyMarket ? `<p class="footnote">* Equity is the ${MARKET_BASIS === "low" ? "low end of the latest market estimate ranges" : "latest market estimates"} (${esc(marketDates.join("; "))}) of ${usd(marketTotal)} minus loan balances of ${usd(balance)}. Loan to value (LTV) is loan balances divided by those estimates.${has(purchaseTotal) && has(balance) ? ` Based on purchase prices of ${usd(purchaseTotal)}, equity would be ${usd(purchaseTotal - balance)}.` : ""}</p>` : "";
+  const equityNote = anyMarket ? `<p class="footnote">* Equity is market value from ${esc(marketDates.join("; "))} (${esc(ps.filter(({ p }) => p.market).map(({ p }) => `${p.name}: ${floorApplies(p) ? "owners' minimum" : usesLow(p) ? "low end of range" : "midpoint"} ${usd(mv(p))}`).join("; "))}), totaling ${usd(marketTotal)}, minus loan balances of ${usd(balance)}. Loan to value (LTV) is loan balances divided by those estimates.${has(purchaseTotal) && has(balance) ? ` Based on purchase prices of ${usd(purchaseTotal)}, equity would be ${usd(purchaseTotal - balance)}.` : ""}</p>` : "";
   const rent = T(x => x.c.income), debt = T(x => x.c.debt), exp = T(x => x.c.expenses);
   const market = T(x => mv(x.p));
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
