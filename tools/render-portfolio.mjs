@@ -282,12 +282,10 @@ export function renderPortfolio(data, title) {
     ${!data.sample && incomplete ? `<p class="sample-note">Some figures have not been entered yet and show as a dash. Totals appear once every property's figures are in.</p>` : ""}
   </div>
 
-  ${ps.map(({ p }) => property(p)).join("")}
-
   <section class="pblock pb-portfolio" aria-labelledby="pb-portfolio-title">
     <header class="pb-head">
       <div class="pb-title">
-        <h2 id="pb-portfolio-title">Portfolio</h2>
+        <h2 id="pb-portfolio-title">Portfolio summary</h2>
         <p>${ps.length} ${ps.length === 1 ? "property" : "properties"} · ${esc([...new Set(ps.map(({ p }) => p.city).filter(Boolean))].join("; "))}</p>
       </div>
     </header>
@@ -304,6 +302,8 @@ export function renderPortfolio(data, title) {
     ${equityNote}
     <p class="footnote">† Monthly amounts: income, debt service, expenses and cash flow are per month.</p>
   </section>
+
+  ${ps.map(({ p }) => property(p)).join("")}
 </div>`;
 }
 
