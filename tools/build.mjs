@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { renderPortfolio, renderTenant } from "./render-portfolio.mjs";
+import { renderCompanies } from "./render-companies.mjs";
 import { webcrypto as crypto, createHash } from "node:crypto";
 
 const ITERATIONS = 600000;
@@ -34,9 +35,12 @@ const userKey = (vaultId, u) => createHash("sha256").update(vaultId + "\n" + u.t
 const { tenants = {}, ...portalLogins } = logins;
 for (const [id, { title, users }] of Object.entries(portalLogins)) {
   // A portal with a data file (portals/<id>.json) is rendered from it; otherwise portals/<id>.html is used as is.
-  const html = existsSync(root + `portals/${id}.json`)
-    ? renderPortfolio(JSON.parse(read(`portals/${id}.json`)), title || id)
-    : read(`portals/${id}.html`).toString();
+  // A data file with "companies" is Cadency's portfolio companies; one with "properties" is a real estate portfolio.
+  let html;
+  if (existsSync(root + `portals/${id}.json`)) {
+    const data = JSON.parse(read(`portals/${id}.json`));
+    html = data.companies ? renderCompanies(data, title || id) : renderPortfolio(data, title || id);
+  } else html = read(`portals/${id}.html`).toString();
   vault[id] = {};
   for (const [username, password] of Object.entries(users)) vault[id][userKey(id, username)] = await encrypt(html, username, password);
 }
