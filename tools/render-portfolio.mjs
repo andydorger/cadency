@@ -325,6 +325,13 @@ export function renderTenant(data, p, u) {
       <a class="button venmo" href="${esc(venmoUrl)}" target="_blank" rel="noopener">Pay with Venmo</a>
       <p class="handle">Venmo: <strong>@${esc(data.venmo)}</strong></p>
       <p class="note">Please put your address and the month in the Venmo note, for example “${esc(address)}, ${new Date().toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })} rent.”</p>
+      ${data.check ? `<div class="check">
+        <p class="or" aria-hidden="true"><span>or</span></p>
+        <h4>Pay by check</h4>
+        <p>Make checks payable to <strong>${esc(data.check.payee)}</strong> and mail or drop them off at:</p>
+        <address>${esc(data.check.address).replace(/,\s*/, "<br>")}</address>
+        <p class="note">Please write your address and the month on the memo line.</p>
+      </div>` : ""}
       <p class="note">Rent is late if not paid within 5 days of the 1st. A late fee of $10 per day applies after that.</p>
     </section>
 
