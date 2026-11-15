@@ -262,7 +262,7 @@ export function renderPortfolio(data, title) {
     <div><span>Estimated value</span><strong>${usd(value)}</strong></div>
     <div><span>Loan balances</span><strong>${usd(balance)}</strong></div>
     <div><span>Equity${anyMarket ? "*" : ""}</span><strong>${usd(equity)}</strong></div>
-    <div class="key"><span>Cash flow after debt</span><strong>${signed(flow)}${has(flow) ? "<small> / mo</small>" : ""}</strong></div>
+    <div class="key"><span>Cash flow after debt†</span><strong>${signed(flow)}${has(flow) ? "<small> / mo</small>" : ""}</strong></div>
   </div>
 
   ${equityNote}
@@ -271,11 +271,12 @@ export function renderPortfolio(data, title) {
     <h3>Monthly cash flow by property</h3>
     <div class="scroll">
       <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Income</th><th class="num">Debt service</th><th class="num">Expenses</th><th class="num">Cash flow</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV${anyMarket ? "*" : ""}</th></tr></thead>
+        <thead><tr><th>Property</th><th class="num">Income†</th><th class="num">Debt service†</th><th class="num">Expenses†</th><th class="num">Cash flow†</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV${anyMarket ? "*" : ""}</th></tr></thead>
         <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(mv(p))}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(market)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
       </table>
     </div>
+    <p class="footnote">† Monthly amounts: income, debt service, expenses and cash flow are per month.</p>
   </section>
 
   <section class="block">
