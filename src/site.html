@@ -409,7 +409,7 @@ form .button { width: 100%; }
 .eb-bar { display: flex; height: 14px; gap: 2px; }
 .eb-bar span { display: block; }
 .eb .owed { background: #c4664a; }
-@media (max-width: 720px) { .pb-portfolio .pb-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pb-portfolio .pb-metrics div:nth-child(5n+1) { padding-left: .9rem; } .pb-portfolio .pb-metrics div:nth-child(2n+1) { padding-left: 0; } }
+@media (max-width: 720px) { body .pb-portfolio .pb-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } body .pb-portfolio .pb-metrics div:nth-child(5n+1) { padding-left: .9rem; } body .pb-portfolio .pb-metrics div:nth-child(2n+1) { padding-left: 0; } }
 .eb .eq { background: #3aa48a; }
 .eb-key { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.25rem; margin-top: .9rem; font-size: .95rem; color: var(--band-ink, var(--paper)); }
 .eb-key span { display: inline-flex; align-items: center; gap: .45rem; }
@@ -463,6 +463,21 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
   form { padding: 1.75rem 1.25rem; }
   .heraldry { padding: 1.5rem 1.25rem; }
 }
+/* Signed-in portal (both sites): compact header with Sign Out; the portal's own logo bar is hidden. */
+body.portal-on .masthead .wrap { display: flex; align-items: center; justify-content: space-between; gap: .75rem 2rem; flex-wrap: wrap; padding-block: .85rem; max-width: 72rem; }
+body.portal-on .brand { display: flex; align-items: center; gap: .8rem; }
+body.portal-on .brand .mp-mark { width: 3.4rem; }
+body.portal-on .wordmark { font-size: .95rem; letter-spacing: .32em; margin-right: 0; }
+body.portal-on .portal-bar { display: none; }
+@media (max-width: 720px) { body.portal-on .masthead nav { order: 3; flex-basis: 100%; } body.portal-on .masthead nav ul { justify-content: flex-start; } }
+.mh-out { font-family: var(--display); font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); background: none; border: 0; border-bottom: 1px solid var(--rule); padding: .35rem 0 .25rem; cursor: pointer; margin-left: auto; }
+.mh-out:hover { color: var(--ink); border-bottom-color: var(--brass); }
+.mh-out:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+.site-mp .mh-out { color: var(--gold-btn); border-bottom-color: rgba(243, 238, 226, .25); }
+.site-mp .mh-out:hover { color: var(--band-ink); border-bottom-color: var(--gold-btn); }
+body.portal-on .masthead { position: sticky; top: 0; z-index: 20; }
+body.portal-on #view-company { padding-top: 2.75rem; }
+body.portal-on .portal-dup { display: none !important; }
 <!--@mp-->
 /* Owner portal: property photo gallery */
 #owner-gallery { margin-top: 3rem; padding-top: 2.25rem; border-top: 1px solid var(--rule); }
@@ -497,17 +512,6 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
 .og-box .og-next { right: .25rem; top: 50%; transform: translateY(-50%); }
 @media (max-width: 560px) { #owner-gallery ul { grid-template-columns: repeat(3, 1fr); gap: .4rem; } .og-box .og-prev, .og-box .og-next { top: auto; bottom: .5rem; transform: none; } }
 /* Owner portal: the masthead becomes one slim bar with the portal's navigation */
-body.portal-on .masthead .wrap { display: flex; align-items: center; justify-content: space-between; gap: .75rem 2rem; flex-wrap: wrap; padding-block: .85rem; max-width: 72rem; }
-body.portal-on .brand { display: flex; align-items: center; gap: .8rem; }
-body.portal-on .brand .mp-mark { width: 3.4rem; }
-body.portal-on .wordmark { font-size: .95rem; letter-spacing: .32em; margin-right: 0; }
-body.portal-on .portal-bar { display: none; }
-body.portal-on .masthead { position: sticky; top: 0; z-index: 20; }
-body.portal-on #portal-content *, body.portal-on #owner-gallery { scroll-margin-top: 6.5rem; }
-body.portal-on.view-prop #portal-content { display: none; }
-body.portal-on.has-pages:not(.view-springer) #owner-gallery { display: none !important; }
-body.portal-on #view-company { padding-top: 2.75rem; }
-body.portal-on .portal-dup { display: none !important; }
 .pnav { display: flex; align-items: center; gap: 1rem 2rem; flex-wrap: wrap; justify-content: flex-end; flex: 1 1 auto; }
 .pnav[hidden] { display: none !important; }
 .pnav ul { list-style: none; margin: 0; padding: 0; display: flex; justify-content: flex-start; gap: .25rem 1.9rem; flex-wrap: nowrap; }
@@ -648,6 +652,7 @@ body.portal-on .portal-dup { display: none !important; }
       <span class="wordmark">MP HOLDINGS</span>
     </a>
 <!--@end-->
+    <button type="button" class="mh-out" id="mh-out" hidden>Sign Out</button>
   </div>
 </header>
 
@@ -858,6 +863,10 @@ function show() {
     $("portal-content").innerHTML = "";
     document.title = current === "about" ? SITE_TITLE + " · About Us" : SITE_TITLE;
   }
+  // While a portal is open, the header carries Sign Out and the portal's own logo bar is hidden.
+  const portalOpen = isPortal && !!unlocked[current];
+  document.body.classList.toggle("portal-on", portalOpen);
+  $("mh-out").hidden = !portalOpen;
   if (typeof syncGallery === "function") syncGallery();
   window.scrollTo(0, 0);
 }
@@ -885,6 +894,7 @@ $("login-form").addEventListener("submit", async e => {
   }
 });
 
+$("mh-out").addEventListener("click", () => $("sign-out").click());
 $("sign-out").addEventListener("click", () => {
   delete unlocked[current];
   location.hash = "";
