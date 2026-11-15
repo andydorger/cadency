@@ -140,7 +140,6 @@ function property(p) {
     l.mi ? ["Mortgage insurance", usd(l.mi) + (l.miNote ? ` <span class="sub">(${esc(l.miNote)})</span>` : "")] : null,
     l.escrow ? [`Escrow (${esc(l.escrowLabel || "taxes and insurance")})`, usd(l.escrow)] : null,
     (l.mi || l.escrow) && has(c.mortgageDebt) ? ["Total monthly payment", usd(c.mortgageDebt)] : null,
-    ["Loan to value" + (p.heloc ? " (incl. HELOC)" : "") + (p.market ? "*" : ""), pct(c.ltv)]
   ]);
   const h = p.heloc;
   if (h) financing += `
@@ -178,12 +177,25 @@ function property(p) {
         <div><dt>Cash-on-cash return</dt><dd>${pct(c.cashOnCash)}</dd></div>
       </dl>` : awaiting("Rent and expenses");
 
+  const star = p.market ? "*" : "";
+  const photo = p.photo ? `
+    <button type="button" class="pb-photo" ${p.gallery ? `data-gallery="${esc(p.gallery.key)}"` : `data-single="${esc(p.photo.src)}" data-cap="${esc(p.name)}"`} aria-label="Open photos of ${esc(p.name)}">
+      <img src="${esc(p.photo.src)}" alt="Exterior of ${esc(p.name)}" style="object-position:${esc(p.photo.pos || "center")}" decoding="async">
+      ${p.gallery ? `<span class="pb-count">View all ${p.gallery.count} photos</span>` : ""}
+    </button>` : "";
   return `
-<details class="property">
-  <summary>
-    <span class="p-name"><strong>${esc(p.name)}</strong><span>${subtitle}</span></span>
-    <span class="p-flow"><span>Cash flow / mo</span>${signed(c.cashFlow)}</span>
-  </summary>
+<article class="pblock" id="${esc(p.id || "")}">
+  <header class="pb-head">${photo}
+    <div class="pb-title">
+      <h2>${esc(p.name)}</h2>
+      <p>${subtitle}</p>
+    </div>
+  </header>
+  ${metrics([
+    ["Income†", usd(c.income)], ["Debt service†", neg(c.debt)], ["Expenses†", neg(c.expenses)], ["Cash flow†", signed(c.cashFlow), "key"],
+    ["Value" + star, usd(has(mv(p)) ? mv(p) : p.estimatedValue)], ["Equity" + star, signed(c.equity)], ["LTV" + star, pct(c.ltv, 0)],
+    ["Appreciation" + star, has(c.appreciation) ? `${signed(c.appreciation)} <small>${pct(c.appreciationPct)}</small>` : NA]
+  ])}
   <div class="p-body">
     <section class="panel">
       <h4>Purchase and value</h4>
@@ -191,12 +203,10 @@ function property(p) {
         ["Purchase price", usd(p.purchasePrice)],
         ["Purchased", date(p.purchaseDate)],
         ["Closing costs", usd(p.closingCosts)],
-        ["Estimated value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
+        ["Recorded value", usd(p.estimatedValue) + (p.valueSource ? ` <span class="sub">(${esc(p.valueSource)})</span>` : "")],
         p.market ? [floorApplies(p) ? `Value used (${esc(p.market.source)} checked ${monthYear(p.market.date)})` : `Market estimate (${esc(p.market.source)}, ${monthYear(p.market.date)})`,
           `${usd(mv(p))}${floorApplies(p) ? ` <span class="sub">(owners' minimum; RentCast range ${usd(p.market.low)} – ${usd(p.market.high)})</span>` : has(p.market.low) ? ` <span class="sub">(${usesLow(p) ? `low end of range ${usd(p.market.low)} – ${usd(p.market.high)}; midpoint ${usd(p.market.value)}` : `midpoint of range ${usd(p.market.low)} – ${usd(p.market.high)}`})</span>` : ""}`] : null,
-        p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null,
-        ["Estimated appreciation" + (p.market ? "*" : ""), has(c.appreciation) ? `${signed(c.appreciation)} <span class="sub">(${pct(c.appreciationPct)})</span>` : NA],
-        ["Equity" + (p.market ? "*" : ""), usd(c.equity)]
+        p.zillow ? ["Live estimate", `<a class="ext" href="${esc(p.zillow)}" target="_blank" rel="noopener">View on Zillow</a>`] : null
       ])}
       ${p.market && has(c.balance) ? `<p class="footnote">* ${floorApplies(p)
         ? `Owners' minimum value of ${usd(mv(p))}, used because the ${esc(rawLabel(p))} (${usd(rawMv(p))}, ${monthYear(p.market.date)}) is below it,`
@@ -229,8 +239,12 @@ function property(p) {
       </table></div>` : `<p class="empty">No maintenance recorded yet.</p>`}
     </section>
   </div>
-</details>`;
+</article>`;
 }
+
+// One row of headline figures for a property or the portfolio.
+const metrics = items => `<dl class="pb-metrics">${items.filter(Boolean).map(([k, v, cls]) =>
+  `<div${cls ? ` class="${cls}"` : ""}><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
 
 export function renderPortfolio(data, title) {
   MARKET_BASIS = data.marketBasis || "estimate";
@@ -247,41 +261,48 @@ export function renderPortfolio(data, title) {
   const market = T(x => mv(x.p));
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
+  // Equity and debt bars: each property's value split into what is owed and the owners' equity.
+  const bars = ps.map(({ p, c }) => {
+    const v = has(mv(p)) ? mv(p) : p.estimatedValue;
+    if (!all(v, c.balance) || !v) return "";
+    const owed = Math.min(100, c.balance / v * 100);
+    return `<li><div class="eb-row"><span>${esc(p.name)}</span><span>${usd(v)}</span></div>
+      <div class="eb-bar" role="img" aria-label="${esc(p.name)}: ${usd(c.balance)} owed, ${usd(v - c.balance)} equity">
+        <span class="owed" style="width:${owed.toFixed(1)}%"></span><span class="eq" style="width:${(100 - owed).toFixed(1)}%"></span>
+      </div></li>`;
+  }).join("");
+  const appreciation = has(purchaseTotal) && has(marketTotal) ? marketTotal - purchaseTotal : null;
+
   return `
 <div class="portal">
   <div class="intro">
     <p class="eyebrow">${esc(title)} · ${esc(data.portalLabel || "Executive Portal")}</p>
     <h1>Portfolio</h1>
-    <p>${data.asOf ? `Figures as of ${esc(data.asOf)}. ` : ""}Select a property for financing, tenant, rent and maintenance details.</p>
     ${data.sample ? `<p class="sample-note">Sample data. These properties and figures are examples to show the layout.</p>` : ""}
     ${!data.sample && incomplete ? `<p class="sample-note">Some figures have not been entered yet and show as a dash. Totals appear once every property's figures are in.</p>` : ""}
   </div>
 
-  <div class="tiles">
-    <div><span>Properties</span><strong>${ps.length}</strong></div>
-    <div><span>Estimated value</span><strong>${usd(value)}</strong></div>
-    <div><span>Loan balances</span><strong>${usd(balance)}</strong></div>
-    <div><span>Equity${anyMarket ? "*" : ""}</span><strong>${usd(equity)}</strong></div>
-    <div class="key"><span>Cash flow after debt†</span><strong>${signed(flow)}${has(flow) ? "<small> / mo</small>" : ""}</strong></div>
-  </div>
+  ${ps.map(({ p }) => property(p)).join("")}
 
-  ${equityNote}
-
-  <section class="block">
-    <h3>Monthly cash flow by property</h3>
-    <div class="scroll">
-      <table class="ledger-table">
-        <thead><tr><th>Property</th><th class="num">Income†</th><th class="num">Debt service†</th><th class="num">Expenses†</th><th class="num">Cash flow†</th><th class="num">Est. value</th><th class="num">Market est.</th><th class="num">Equity${anyMarket ? "*" : ""}</th><th class="num">LTV${anyMarket ? "*" : ""}</th></tr></thead>
-        <tbody>${ps.map(({ p, c }) => `<tr><td>${esc(p.name)}</td><td class="num">${usd(c.income)}</td><td class="num">${neg(c.debt)}</td><td class="num">${neg(c.expenses)}</td><td class="num strong">${signed(c.cashFlow)}</td><td class="num">${usd(p.estimatedValue)}</td><td class="num">${usd(mv(p))}</td><td class="num">${usd(c.equity)}</td><td class="num">${pct(c.ltv, 0)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td>Total</td><td class="num">${usd(rent)}</td><td class="num">${neg(debt)}</td><td class="num">${neg(exp)}</td><td class="num strong">${signed(flow)}</td><td class="num">${usd(value)}</td><td class="num">${usd(market)}</td><td class="num">${usd(equity)}</td><td class="num">${pct(ltv, 0)}</td></tr></tfoot>
-      </table>
-    </div>
+  <section class="pblock pb-portfolio" aria-labelledby="pb-portfolio-title">
+    <header class="pb-head">
+      <div class="pb-title">
+        <h2 id="pb-portfolio-title">Portfolio</h2>
+        <p>${ps.length} ${ps.length === 1 ? "property" : "properties"} · ${esc([...new Set(ps.map(({ p }) => p.city).filter(Boolean))].join("; "))}</p>
+      </div>
+    </header>
+    ${metrics([
+      ["Properties", String(ps.length)], ["Income†", usd(rent)], ["Debt service†", neg(debt)], ["Expenses†", neg(exp)], ["Cash flow†", signed(flow), "key"],
+      ["Value" + (anyMarket ? "*" : ""), usd(marketTotal)], ["Loan balances", usd(balance)], ["Equity" + (anyMarket ? "*" : ""), signed(equity)],
+      ["LTV" + (anyMarket ? "*" : ""), pct(ltv, 0)], ["Appreciation" + (anyMarket ? "*" : ""), has(appreciation) ? `${signed(appreciation)} <small>${pct(appreciation / purchaseTotal * 100)}</small>` : NA]
+    ])}
+    ${bars ? `<div class="eb">
+      <h4>Equity and debt</h4>
+      <ul>${bars}</ul>
+      <p class="eb-key"><span><i class="owed"></i>Owed ${usd(balance)}</span><span><i class="eq"></i>Equity ${signed(equity)}</span></p>
+    </div>` : ""}
+    ${equityNote}
     <p class="footnote">† Monthly amounts: income, debt service, expenses and cash flow are per month.</p>
-  </section>
-
-  <section class="block">
-    <h3>Properties</h3>
-    <div class="properties">${ps.map(({ p }) => property(p)).join("")}</div>
   </section>
 </div>`;
 }
