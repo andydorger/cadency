@@ -167,7 +167,7 @@ p { margin: 0; }
 .entrances { max-width: 52rem; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
 .entrance {
   display: grid;
-  grid-template-rows: 11rem auto auto auto;
+  grid-template-rows: 11rem auto auto auto auto;
   justify-items: center;
   align-items: end;
   gap: 1.1rem;
@@ -440,6 +440,24 @@ form .button { width: 100%; }
   .pblock > .footnote, .pb-portfolio .footnote, .eb { margin-inline: 1.1rem; }
 }
 
+/* Header label naming the open portal's company */
+.mh-context { display: flex; align-items: center; gap: .7rem; padding-left: 1.25rem; border-left: 1px solid var(--rule); min-width: 0; }
+.mh-context .mp-mark { width: 3rem; flex: none; }
+.mh-context .crest { height: 2rem; width: auto; flex: none; }
+.mh-co { font-family: var(--display); font-weight: 600; font-size: .95rem; letter-spacing: .28em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.mh-meta { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--brass); white-space: nowrap; }
+.mh-context.other { background: var(--paper-2); border: 1px solid var(--rule); border-left: 3px solid var(--brass); padding: .4rem .9rem .4rem .7rem; }
+.site-mp .mh-context { border-left-color: rgba(243, 238, 226, .25); }
+.site-mp .mh-co { color: var(--band-ink); }
+.site-mp .mh-meta { color: var(--gold-btn); }
+.entrance .tagline { font-style: italic; color: var(--ink-soft); font-size: 1.05rem; margin-top: -.4rem; }
+@media (max-width: 720px) {
+  .mh-context { order: 4; flex-basis: 100%; border-left: 0; padding-left: 0; flex-wrap: wrap; gap: .2rem .6rem; }
+  .mh-context.other { padding: .45rem .7rem; border-left: 3px solid var(--brass); }
+  .mh-co { font-size: .85rem; letter-spacing: .22em; }
+  .mh-meta { font-size: .68rem; white-space: normal; }
+}
+
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
 .heraldry p { color: var(--ink-soft); font-size: 1.05rem; }
@@ -457,7 +475,7 @@ footer .wrap { padding-block: 2rem 2.5rem; display: flex; flex-wrap: wrap; justi
   body { font-size: 1.125rem; }
   main { padding-block: 3rem 3.5rem; }
   .entrances { grid-template-columns: 1fr; gap: 1.5rem; }
-  .entrance { grid-template-rows: 8.5rem auto auto auto; padding: 2.25rem 1.25rem 2rem; }
+  .entrance { grid-template-rows: 8.5rem auto auto auto auto; padding: 2.25rem 1.25rem 2rem; }
   .entrance .crest { height: 8rem; }
   .entrance .mp-mark { width: 12rem; }
   .entrance .name { font-size: 1.45rem; }
@@ -483,6 +501,7 @@ body.portal-on .brand { display: flex; align-items: center; gap: .8rem; }
 body.portal-on .brand .mp-mark { width: 3.4rem; }
 body.portal-on .wordmark { font-size: .95rem; letter-spacing: .32em; margin-right: 0; }
 body.portal-on .portal-bar { display: none; }
+body.portal-on .masthead nav { display: none; }
 @media (max-width: 720px) { body.portal-on .masthead nav { order: 3; flex-basis: 100%; } body.portal-on .masthead nav ul { justify-content: flex-start; } }
 .mh-out { font-family: var(--display); font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); background: none; border: 0; border-bottom: 1px solid var(--rule); padding: .35rem 0 .25rem; cursor: pointer; margin-left: auto; }
 .mh-out:hover { color: var(--ink); border-bottom-color: var(--brass); }
@@ -666,6 +685,7 @@ body.portal-on .portal-dup { display: none !important; }
       <span class="wordmark">MP HOLDINGS</span>
     </a>
 <!--@end-->
+    <span class="mh-context" id="mh-context" hidden></span>
     <button type="button" class="mh-out" id="mh-out" hidden>Sign Out</button>
   </div>
 </header>
@@ -683,12 +703,14 @@ body.portal-on .portal-dup { display: none !important; }
       <a class="entrance" href="#cadency">
         <span class="crest" role="img" aria-label="Cadency crest"></span>
         <span class="name">CADENCY</span>
+        <span class="tagline">Operating businesses</span>
         <span class="eyebrow">Executive Login</span>
         <span class="go">Sign In</span>
       </a>
       <a class="entrance" href="#mp-owner">
         <span class="mp-mark" role="img" aria-label="MP Holdings mark: a top hat, monocle and moustache above a house"></span>
         <span class="name">MP HOLDINGS</span>
+        <span class="tagline">Real estate</span>
         <span class="eyebrow">Owner Login</span>
         <span class="go">Sign In</span>
       </a>
@@ -802,8 +824,8 @@ body.portal-on .portal-dup { display: none !important; }
 document.getElementById("year").textContent = new Date().getFullYear();
 
 const COMPANIES = {
-  "cadency":     { name: "CADENCY",     title: "Cadency",     logo: '<span class="crest" aria-hidden="true"></span>' },
-  "mp-holdings": { name: "MP HOLDINGS", title: "MP Holdings", logo: '<span class="mp-mark" aria-hidden="true"></span>' }
+  "cadency":     { name: "CADENCY",     title: "Cadency",     focus: "Operating businesses", logo: '<span class="crest" aria-hidden="true"></span>' },
+  "mp-holdings": { name: "MP HOLDINGS", title: "MP Holdings", focus: "Real estate",          logo: '<span class="mp-mark" aria-hidden="true"></span>' }
 };
 // Each sign-in page: which company it belongs to and which encrypted entry it opens.
 const ALL_PORTALS = {
@@ -880,6 +902,17 @@ function show() {
   // While a portal is open, the header carries Sign Out and the portal's own logo bar is hidden.
   const portalOpen = isPortal && !!unlocked[current];
   document.body.classList.toggle("portal-on", portalOpen);
+  // Say in the header whose portal this is: on the Cadency site the MP Holdings owner portal
+  // must not look like Cadency's own.
+  if (portalOpen) {
+    const portal = PORTALS[current], c = COMPANIES[portal.company];
+    const own = (SITE_TITLE === c.title);
+    $("mh-context").innerHTML = (own ? "" : c.logo) + '<span class="mh-co"></span><span class="mh-meta"></span>';
+    $("mh-context").querySelector(".mh-co").textContent = c.title;
+    $("mh-context").querySelector(".mh-meta").textContent = c.focus + " \u00b7 " + portal.label;
+    $("mh-context").classList.toggle("other", !own);
+  }
+  $("mh-context").hidden = !portalOpen;
   $("mh-out").hidden = !portalOpen;
   if (typeof syncGallery === "function") syncGallery();
   window.scrollTo(0, 0);
