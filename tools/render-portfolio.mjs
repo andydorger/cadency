@@ -261,16 +261,24 @@ export function renderPortfolio(data, title) {
   const market = T(x => mv(x.p));
   const incomplete = ps.some(({ c }) => !has(c.cashFlow) || !has(c.equity));
 
-  // Equity and debt bars: each property's value split into what is owed and the owners' equity.
-  const bars = ps.map(({ p, c }) => {
-    const v = has(mv(p)) ? mv(p) : p.estimatedValue;
-    if (!all(v, c.balance) || !v) return "";
-    const owed = Math.min(100, c.balance / v * 100);
-    return `<li><div class="eb-row"><span>${esc(p.name)}</span><span>${usd(v)}</span></div>
-      <div class="eb-bar" role="img" aria-label="${esc(p.name)}: ${usd(c.balance)} owed, ${usd(v - c.balance)} equity">
-        <span class="owed" style="width:${owed.toFixed(1)}%"></span><span class="eq" style="width:${(100 - owed).toFixed(1)}%"></span>
-      </div></li>`;
-  }).join("");
+  // Equity and debt pies: each property's value (and the portfolio's) split into what is owed and the owners' equity.
+  const pie = (label, v, owedAmt) => {
+    if (!all(v, owedAmt) || !v) return "";
+    const owed = Math.max(0, Math.min(100, owedAmt / v * 100)), eq = 100 - owed;
+    return `<figure class="pie">
+      <svg viewBox="0 0 42 42" role="img" aria-label="${esc(label)}: ${usd(owedAmt)} owed, ${usd(v - owedAmt)} equity, of ${usd(v)}">
+        <circle class="pie-owed" cx="21" cy="21" r="15.915" stroke-dasharray="${owed.toFixed(2)} ${(100 - owed).toFixed(2)}" stroke-dashoffset="25"/>
+        ${eq > 0 ? `<circle class="pie-eq" cx="21" cy="21" r="15.915" stroke-dasharray="${eq.toFixed(2)} ${(100 - eq).toFixed(2)}" stroke-dashoffset="${(25 - owed).toFixed(2)}"/>` : ""}
+        <text x="21" y="20.5" class="pie-pct">${Math.round(Math.max(0, (v - owedAmt) / v * 100))}%</text>
+        <text x="21" y="25.5" class="pie-sub">equity</text>
+      </svg>
+      <figcaption><strong>${esc(label)}</strong><span>${usd(v)}</span>
+        <span class="pie-legend"><i class="owed"></i>Owed ${usd(owedAmt)}</span>
+        <span class="pie-legend"><i class="eq"></i>Equity ${signed(v - owedAmt)}</span></figcaption>
+    </figure>`;
+  };
+  const pies = ps.map(({ p, c }) => pie(p.name, has(mv(p)) ? mv(p) : p.estimatedValue, c.balance)).join("")
+    + (ps.length > 1 ? pie("Portfolio", marketTotal, balance) : "");
   const appreciation = has(purchaseTotal) && has(marketTotal) ? marketTotal - purchaseTotal : null;
 
   return `
@@ -294,10 +302,9 @@ export function renderPortfolio(data, title) {
       ["Value" + (anyMarket ? "*" : ""), usd(marketTotal)], ["Loan balances", usd(balance)], ["Equity" + (anyMarket ? "*" : ""), signed(equity)],
       ["LTV" + (anyMarket ? "*" : ""), pct(ltv, 0)], ["Appreciation" + (anyMarket ? "*" : ""), has(appreciation) ? `${signed(appreciation)} <small>${pct(appreciation / purchaseTotal * 100)}</small>` : NA]
     ])}
-    ${bars ? `<div class="eb">
+    ${pies ? `<div class="eb">
       <h4>Equity and debt</h4>
-      <ul>${bars}</ul>
-      <p class="eb-key"><span><i class="owed"></i>Owed ${usd(balance)}</span><span><i class="eq"></i>Equity ${signed(equity)}</span></p>
+      <div class="pies">${pies}</div>
     </div>` : ""}
     ${equityNote}
     <p class="footnote">† Monthly amounts: income, debt service, expenses and cash flow are per month.</p>
