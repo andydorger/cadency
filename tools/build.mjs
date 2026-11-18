@@ -65,7 +65,7 @@ const SITES = [
     portals: ["mp-owner", "mp-tenant"], vaults: ["mp-holdings", "mp-tenants"] }
 ];
 const template = read("src/site.html").toString()
-  .replaceAll("{{CADENCY_CREST}}", dataUri("src/assets/cadency-crest.png"))
+  .replaceAll("{{CADENCY_CREST}}", dataUri("src/assets/cadency-seal.png"))
   .replaceAll("{{MP_INK}}", dataUri("src/assets/mp-mark-ink.png"))
   .replaceAll("{{MP_GOLD}}", dataUri("src/assets/mp-mark-gold.png"))
   .replaceAll("{{MP_HOUSE}}", dataUri("src/assets/mp-house.png"));
