@@ -19,7 +19,7 @@
   --ink-soft: #3c4a5e;
   --muted: #6b7584;
   --brass: #9b7d4e;
-  --gold: #b8955a;
+  --gold: #994509; /* mahogany, matched to the wood of the Cadency boat */
   --rule: #d9d4c7;
   --crest: #0f213a;
   --danger: #8a2a2a;
@@ -31,12 +31,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
-    --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
+    --muted: #8f97a3; --brass: #c4a571; --gold: #b0602a; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
-  --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
+  --muted: #8f97a3; --brass: #c4a571; --gold: #b0602a; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -310,7 +310,7 @@ form .button { width: 100%; }
 /* ---------- MP Holdings colour: the logo's navy and gold ---------- */
 .site-mp {
   --band: #14294a; --band-2: #0e1f3a; --band-ink: #f3eee2; --band-muted: #aeb6c4;
-  --gold-btn: #c49a52; --cream: #f2ecdf;
+  --gold-btn: #994509; --gold-ink: #d9935c; --cream: #f2ecdf; /* mahogany; lighter tint for small text on navy */
 }
 .site-mp body, body.site-mp { background: var(--paper); }
 .site-mp .masthead { background: var(--band); border-bottom: 3px solid var(--gold-btn); }
@@ -323,14 +323,14 @@ form .button { width: 100%; }
   margin-inline: calc(50% - 50vw); padding: 3rem max(16px, env(safe-area-inset-left, 0px)) 3.25rem;
   background: linear-gradient(180deg, var(--band-2), var(--band)); margin-bottom: 3.5rem;
 }
-.site-mp .landing-head .eyebrow { color: var(--gold-btn); }
+.site-mp .landing-head .eyebrow { color: var(--gold-ink); }
 .site-mp .landing-head .motto { color: var(--band-ink); font-size: clamp(1.4rem, 3vw, 1.9rem); max-width: 40rem; }
 .site-mp .entrance { background: var(--cream); border-color: transparent; outline-color: var(--gold-btn); border-top: 3px solid var(--gold-btn); }
 .site-mp .entrance:hover { background: var(--cream); border-color: transparent; border-top-color: var(--band); outline-color: var(--band); }
 .site-mp .entrance .name { color: var(--band); }
 .site-mp .entrance .lede { color: #4a5568; }
 .site-mp .go, .site-mp .button { background: var(--band); color: var(--band-ink); border-color: var(--band); }
-.site-mp .entrance:hover .go, .site-mp .go:hover, .site-mp .button:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-2); }
+.site-mp .entrance:hover .go, .site-mp .go:hover, .site-mp .button:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-ink); }
 .site-mp #view-company { padding-top: 3.5rem; }
 .site-mp form { border-top: 3px solid var(--gold-btn); }
 .site-mp .pay-card { background: var(--band); border-top: 3px solid var(--gold-btn); }
@@ -338,10 +338,10 @@ form .button { width: 100%; }
 .site-mp .pay-card .due, .site-mp .pay-card .handle, .site-mp .pay-card .facts dt, .site-mp .pay-card .facts dd { color: var(--band-ink); }
 .site-mp .pay-card .note { color: var(--band-muted); }
 .site-mp .pay-card .facts div { border-bottom-color: rgba(243, 238, 226, .2); }
-.site-mp .pay-card .venmo { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-2); }
-.site-mp .pay-card .venmo:hover { background: var(--band-ink); border-color: var(--band-ink); }
+.site-mp .pay-card .venmo { background: var(--gold-btn); border-color: var(--gold-btn); color: var(--band-ink); }
+.site-mp .pay-card .venmo:hover { background: var(--band-ink); border-color: var(--band-ink); color: var(--band-2); }
 .site-mp .tiles .key { background: var(--band); }
-.site-mp .tiles .key > span { color: var(--gold-btn); }
+.site-mp .tiles .key > span { color: var(--gold-ink); }
 .site-mp .tiles .key strong, .site-mp .tiles .key small, .site-mp .tiles .key .neg { color: var(--band-ink); }
 .site-mp footer { background: var(--band); border-top: 3px solid var(--gold-btn); }
 .site-mp footer .wrap { color: var(--band-muted); }
@@ -379,7 +379,7 @@ form .button { width: 100%; }
 .pb-photo { position: relative; display: block; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .pb-photo img { display: block; width: 100%; height: clamp(12rem, 32vw, 20rem); object-fit: cover; }
 .pb-count { position: absolute; right: .9rem; bottom: .9rem; font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #f3eee2; background: rgba(14, 31, 58, .82); padding: .5rem .8rem .45rem; }
-.pb-photo:hover .pb-count { background: var(--gold-btn, var(--brass)); color: #0e1f3a; }
+.pb-photo:hover .pb-count { background: var(--gold-btn, var(--brass)); color: #f3eee2; }
 .pb-photo:focus-visible { outline: 3px solid var(--gold-btn, var(--brass)); outline-offset: -3px; }
 .pb-title { padding: 1.4rem 1.75rem 0; }
 .pb-title h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
@@ -398,10 +398,10 @@ form .button { width: 100%; }
 .pb-portfolio .pb-title p, .pb-portfolio .pb-metrics dt, .pb-portfolio .pb-metrics dd small, .pb-portfolio .footnote { color: var(--band-muted, #aeb6c4); }
 .pb-portfolio .pb-metrics { border-top-color: var(--gold-btn, var(--brass)); border-bottom-color: rgba(243, 238, 226, .18); }
 .pb-portfolio .pb-metrics div { border-bottom-color: rgba(243, 238, 226, .18); }
-.pb-portfolio .pb-metrics .key dt { color: var(--gold-btn, var(--brass)); }
+.pb-portfolio .pb-metrics .key dt { color: var(--gold-ink, var(--gold-btn, var(--brass))); }
 .pb-portfolio .neg { color: #f0a59a; }
 .eb { margin: 1.5rem 1.75rem 1.25rem; }
-.eb h4 { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold-btn, var(--brass)); margin: 0 0 .8rem; }
+.eb h4 { font-family: var(--display); font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold-ink, var(--gold-btn, var(--brass))); margin: 0 0 .8rem; }
 .eb ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
 .eb-row { display: flex; justify-content: space-between; gap: 1rem; color: var(--band-ink, #f3eee2); font-size: 1rem; margin-bottom: .35rem; }
 .eb-row span:last-child { font-variant-numeric: tabular-nums; color: var(--band-muted, #aeb6c4); }
@@ -448,7 +448,7 @@ form .button { width: 100%; }
 .mh-context.other { background: var(--paper-2); border: 1px solid var(--rule); border-left: 3px solid var(--brass); padding: .4rem .9rem .4rem .7rem; }
 .site-mp .mh-context { border-left-color: rgba(243, 238, 226, .25); }
 .site-mp .mh-co { color: var(--band-ink); }
-.site-mp .mh-meta { color: var(--gold-btn); }
+.site-mp .mh-meta { color: var(--gold-ink); }
 .entrance .tagline { font-style: italic; color: var(--ink-soft); font-size: 1.05rem; margin-top: -.4rem; }
 @media (max-width: 720px) {
   .mh-context { order: 4; flex-basis: 100%; border-left: 0; padding-left: 0; flex-wrap: wrap; gap: .2rem .6rem; }
@@ -536,7 +536,7 @@ body.portal-on .masthead nav { display: none; }
 .mh-out { font-family: var(--display); font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); background: none; border: 0; border-bottom: 1px solid var(--rule); padding: .35rem 0 .25rem; cursor: pointer; margin-left: auto; }
 .mh-out:hover { color: var(--ink); border-bottom-color: var(--brass); }
 .mh-out:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
-.site-mp .mh-out { color: var(--gold-btn); border-bottom-color: rgba(243, 238, 226, .25); }
+.site-mp .mh-out { color: var(--gold-ink); border-bottom-color: rgba(243, 238, 226, .25); }
 .site-mp .mh-out:hover { color: var(--band-ink); border-bottom-color: var(--gold-btn); }
 /* Signed in, the header stays on screen with a solid background so the page scrolls cleanly beneath it. */
 body.portal-on .masthead { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); box-shadow: 0 6px 16px -12px rgba(14, 31, 58, .35); }
