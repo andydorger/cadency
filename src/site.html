@@ -59,13 +59,12 @@ body {
 }
 
 /* Logos, drawn as masks so they take the theme's ink */
+/* The Cadency seal is a full-color image (navy seal, wooden boat), shown as drawn in both themes. */
 .crest {
   display: block;
-  aspect-ratio: 597 / 600;
+  aspect-ratio: 633 / 640;
   max-width: 100%;
-  background: var(--crest);
-  -webkit-mask: url("{{CADENCY_CREST}}") center / contain no-repeat;
-          mask: url("{{CADENCY_CREST}}") center / contain no-repeat;
+  background: url("{{CADENCY_CREST}}") center / contain no-repeat;
 }
 .mp-mark { display: block; position: relative; aspect-ratio: 360 / 207; max-width: 100%; }
 .mp-mark::before, .mp-mark::after { content: ""; position: absolute; inset: 0; }
@@ -84,7 +83,7 @@ body {
 .masthead { border-bottom: 1px solid var(--rule); }
 .masthead .wrap { display: grid; justify-items: center; gap: 1.1rem; padding-block: 2rem 1.25rem; }
 .brand { display: grid; justify-items: center; gap: .6rem; color: inherit; text-decoration: none; }
-.brand .crest { width: 3rem; }
+.brand .crest { width: 3.4rem; }
 .brand .mp-mark { width: 5.5rem; }
 .entrance.plain { grid-template-rows: auto auto auto; align-items: center; padding-block: 2.5rem 2.25rem; }
 .entrance.plain .lede { color: var(--ink-soft); font-size: 1.05rem; max-width: 18rem; }
