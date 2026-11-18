@@ -40,8 +40,9 @@
 }
 /* The Cadency site is always navy, whatever the visitor's light/dark setting. */
 body.site-cadency {
-  --paper: #0c1829; --paper-2: #122238; --ink: #ece8dd; --ink-soft: #c5c3ba;
-  --muted: #8f97a3; --brass: #c4a571; --gold: #c9a868; --rule: #2a3a52; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
+  /* navy ground, with brighter borders, secondary text and brass so the page doesn't read too dark */
+  --paper: #0c1829; --paper-2: #16294a; --ink: #f3efe6; --ink-soft: #d9d6cd;
+  --muted: #aab3c2; --brass: #dcbb7e; --gold: #d8b673; --rule: #47608a; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -492,6 +493,14 @@ form .button { width: 100%; }
   .co-legend span { grid-column: 2; }
   .co-updates li { grid-template-columns: 1fr; gap: .2rem; }
 }
+
+/* Cadency site: panels sit on a lighter navy so they lift off the page */
+.site-cadency .entrance { background: var(--paper-2); }
+.site-cadency .entrance:hover { background: #1c3359; border-color: var(--brass); outline-color: var(--brass); }
+.site-cadency .pblock { background: var(--paper-2); }
+.site-cadency form { background: var(--paper-2); }
+.site-cadency .heraldry { background: var(--paper-2); }
+.site-cadency footer { border-top-color: var(--rule); }
 
 /* About */
 .heraldry { max-width: var(--measure); margin: 0 auto; padding: 1.75rem 2rem; background: var(--paper-2); border-top: 1px solid var(--brass); }
