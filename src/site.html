@@ -41,8 +41,8 @@
 /* The Cadency site is always navy, whatever the visitor's light/dark setting. */
 body.site-cadency {
   /* navy ground, with brighter borders, secondary text and brass so the page doesn't read too dark */
-  --paper: #0c1829; --paper-2: #16294a; --ink: #f3efe6; --ink-soft: #d9d6cd;
-  --muted: #aab3c2; --brass: #dcbb7e; --gold: #d8b673; --rule: #47608a; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
+  --paper: #13284a; --paper-2: #1c3660; --ink: #f5f1e8; --ink-soft: #dedbd2;
+  --muted: #b3bccb; --brass: #dcbb7e; --gold: #d8b673; --rule: #57719c; --crest: #ece8dd; --danger: #e09a8f; --ok: #8fcaa6; --ok-bg: #173527; --warn: #e2bf7a; --warn-bg: #3a2f17; --bad: #ec9e94; --bad-bg: #3d1f1f; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -495,10 +495,11 @@ form .button { width: 100%; }
 }
 
 /* Cadency site: panels sit on a lighter navy so they lift off the page */
-.site-cadency .entrance { background: var(--paper-2); }
-.site-cadency .entrance:hover { background: #1c3359; border-color: var(--brass); outline-color: var(--brass); }
-.site-cadency .pblock { background: var(--paper-2); }
-.site-cadency form { background: var(--paper-2); }
+.site-cadency .entrance { background: var(--paper-2); border-color: var(--brass); outline-color: rgba(220, 187, 126, .55); }
+.site-cadency .entrance:hover { background: #223f6d; border-color: var(--brass); outline-color: var(--brass); }
+.site-cadency .pblock { background: var(--paper-2); border-color: var(--brass); }
+.site-cadency .pb-portfolio { background: #20406f; border-color: var(--brass); }
+.site-cadency form { background: var(--paper-2); border: 1px solid var(--brass); border-top-width: 3px; }
 .site-cadency .heraldry { background: var(--paper-2); }
 .site-cadency footer { border-top-color: var(--rule); }
 
