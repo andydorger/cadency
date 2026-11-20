@@ -75,6 +75,10 @@ for (const site of SITES) {
     .replace(/<!--@(\w+)-->([\s\S]*?)<!--@end-->\n?/g, (_, id, body) => id === site.id ? body : "")
     .replaceAll("{{SITE_TITLE}}", site.title)
     .replaceAll("{{SITE_ID}}", site.id)
+    // Browser-tab and home-screen icons: the Cadency seal, or the MP Holdings mark on navy.
+    .replaceAll("{{FAVICON_32}}", dataUri(`src/assets/favicon-${site.id === "mp" ? "mp" : "cadency"}-32.png`))
+    .replaceAll("{{FAVICON_64}}", dataUri(`src/assets/favicon-${site.id === "mp" ? "mp" : "cadency"}-64.png`))
+    .replaceAll("{{FAVICON_180}}", dataUri(`src/assets/favicon-${site.id === "mp" ? "mp" : "cadency"}-180.png`))
     .replaceAll("{{SITE_DESCRIPTION}}", site.description)
     .replace("{{SITE_PORTALS}}", JSON.stringify(site.portals))
     .replace("{{VAULT}}", JSON.stringify(Object.fromEntries(site.vaults.filter(v => vault[v]).map(v => [v, vault[v]]))));
